@@ -1,0 +1,278 @@
+<!-- 
+ Copyright 2019 ISTAT
+
+ Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
+ the European Commission - subsequent versions of the EUPL (the "Licence");
+ You may not use this work except in compliance with the Licence. You may
+ obtain a copy of the Licence at:
+
+ http://ec.europa.eu/idabc/eupl5
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the Licence is distributed on an "AS IS" basis, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ Licence for the specific language governing permissions and limitations under
+ the Licence.
+
+ @author Francesco Amato <framato @ istat.it>
+ @author Mauro Bruno <mbruno @ istat.it>
+ @author Paolo Francescangeli  <pafrance @ istat.it>
+ @author Renzo Iannacone <iannacone @ istat.it>
+ @author Stefano Macone <macone @ istat.it>
+ @version 1.0
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<head th:include="layout :: site-head" th:remove="tag" />
+ 
+ 
+
+
+        
+</head>
+
+
+<script th:inline="javascript"> 
+
+    var _alertFunction = [[#{generic.Function.alert}]];
+    var _alertProcess = [[#{generic.Process.alert}]];
+    var _alertSubprocess = [[#{generic.Subprocess.alert}]];
+    var _alertStep = [[#{generic.Step.alert}]];
+    var _alertFillAllFields = [[#{generic.fillAllFilelds.alert}]];
+	var _functions = [[${listaFunzioni}]];
+	var _processes = [[${listaAllBp}]];
+	var _subprocesses = [[${listaAllSubBp}]];
+	var _steps = [[${listaBusinessStep}]];
+	var _albero = [[${albero}]];
+</script>
+
+<link th:href="@{/css/design/wizard.css}" rel="stylesheet" />
+
+
+<script th:src="@{/js/design/wizard.js}" type="text/javascript"></script>
+
+
+
+<body class="c-app">
+	<div th:replace="layout :: site-aside"></div>
+	<div th:replace="layout :: site-modals"></div>
+	<!-- Body -->
+	<div class="c-wrapper">
+		<header
+			class="c-header c-header-light c-header-fixed c-header-with-subheader">
+			<div th:include="layout :: site-header" th:remove="tag"></div>
+			<div class="c-subheader justify-content-between px-3">
+				<!-- Breadcrumb-->
+				<ol class="breadcrumb border-0 m-0">
+					<li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+					<li class="breadcrumb-item"><span>Process design wizard</span></li>
+				</ol>
+				<!-- Right navigation menu -->
+				<div class="c-header-nav d-md-down-none mfe-2">
+					<a class="c-header-nav-link" th:title="#{session.button.close}"
+						th:href="@{'/'}"> <i class="fa fa-close"></i>&nbsp;<span
+						th:text="#{Layout.Close}"></span>
+					</a>
+				</div>
+			</div>
+		</header>
+
+		<div class="c-body">
+			<main class="c-main">
+				<div class="container-fluid" id="grad1">
+				    <div class="row justify-content-center mt-0">
+				        <div class="col-11 col-sm-9 col-md-7 col-lg-9 text-center p-0 mt-3 mb-2">
+				            <div class="card px-0 pt-5 pb-0 mt-3 mb-3">
+				                <h2><strong th:text="#{generic.processDesignWizard}">Process design wizard</strong></h2>
+				                <p th:text="#{generic.fillAllTheForm}">Fill all form field to go to next step</p>
+				                <div class="row">
+				                
+				                	<div class="col-lg-4"> 	
+				                	    						
+									
+											<div class="treeview-animated w-20 border mx-4">
+											 		
+					
+													<h6 class="pt-3 pl-3"th:text="#{generic.design}">Global design</h6>
+													<hr>
+														
+															<ul class="treeview-animated-list functionList" >
+															 
+	<!-- 														<li th:each="alb: ${albero}" class="treeview-animated-items" > -->
+	<!-- 															 <a class="open closed"><i class="fa fa-plus-circle"></i><span th:text="${alb.getData()}"></span></a> -->
+	<!-- 																<ul class="nested" > -->
+	<!-- 																	<li th:each="foglio: ${alb.getChildren()}" class="treeview-animated-items"> -->
+	<!-- 																	<a class="open closed"><i class="fa fa-plus-circle"></i><span th:text="${foglio.getData()}"></span></a> -->
+	<!-- 																		<ul class="nested"> -->
+	<!-- 																			<li th:each="foglio2: ${foglio.getChildren()}" class="treeview-animated-items"> -->
+	<!-- 						     								 		  		  <a class="open closed"><i class="fa fa-plus-circle"></i ><span th:text="${foglio2.getData()}"></span></a> -->
+	<!-- 																				<ul class="nested"> -->
+	<!-- 																					<li th:each="foglio3: ${foglio2.getChildren()}" class="treeview-animated-items"> -->
+	<!-- 						     								 		  		  		 <div th:text="${foglio3.getData()}" ></div> -->
+						
+	<!-- 																					</li> -->
+	<!-- 																			 	</ul> -->
+	<!-- 																			</li> -->
+	<!-- 																		</ul> -->
+	<!-- 																	</li> -->
+	<!-- 					 										  </ul> -->
+	<!-- 					 									  </li>  -->
+														  	</ul>
+														
+												
+											</div>
+										
+										
+									</div>
+				                
+				                
+				                    <div class="col-md-8 mx-0">
+				                        <form id="msform">
+				                            <!-- progressbar -->
+				                            <ul id="progressbar">
+				                                <li class="active" id="function" th:text="#{generic.Function}"><strong>Function</strong></li>
+				                                <li id="process" th:text="#{generic.Process}"><strong>Process</strong></li>
+				                                <li id="subprocess" th:text="#{generic.Subprocess}"><strong>Subprocess</strong></li>
+				                                <li id="steps" th:text="#{generic.Step}"><strong>Step</strong></li>
+				                                <li id="confirm" th:text="#{generic.Finish}"><strong>Finish!</strong></li>
+				                            </ul> 
+				                            <fieldset name="function">
+				                                <div class="form-card" >
+				                                   
+				                                    		<div class="row">
+				                                    			<div class="col-lg-6">
+				                                    					<h2 class="fs-title" th:text="#{generic.Function}">Function</h2> 	
+				                                    			</div>
+				                                    			<label class="col-lg-2" for="functionList" th:text="#{generic.FunctionList}">Function list:</label> 
+				                                    			<select  id="functionList">
+				                                    				<option value="0" th:text="#{generic.selectBusinessFunction}">Select business function..</option>
+									   								<option th:each="fun: ${listaFunzioni}" th:text="${fun.name}"  th:value="${fun.id}"></option>
+								
+															  </select>
+															</div>	                                    		
+<!-- 															<input id="idf" type="text" name="fieldId" th:placeholder="#{generic.id}" autocomplete="off"  class="form-control" value="0" hidden=true/>  -->
+															<label for="namef" th:text="#{generic.name}">Name:</label> 
+															<input id="namef" type="text" name="fieldName" th:placeholder="#{generic.name}" autocomplete="off"  class="form-control function" value="" /> 
+															<label for="descriptionf" th:text="#{generic.description}">Description:</label> 
+															<input id="descriptionf" type="text" name="fieldDescription" th:placeholder="#{generic.description}" autocomplete="off"  class="form-control function" value="" /> 
+															<label for="labelf" id="labf" th:text="#{generic.label}">Label:</label> 
+															<input id="labelf" type="text" name="fieldLabel"th:placeholder="#{generic.label}" autocomplete="off"  class="form-control function" value="" />
+				                                </div> <input type="button" name="next" class="next action-button" value="Next Step" />
+				                            </fieldset>
+				                            <fieldset name="process">
+				                                <div class="form-card">
+				                                    
+				                                    		<div class="row">
+				                                    			<div class="col-lg-6">
+				                                    					<h2 class="fs-title"  th:text="#{generic.Process}">Process</h2> 
+				                                    			</div>
+				                                    			<label class="col-lg-2" for="processList" th:text="#{generic.ProcessList}">Process list:</label> 
+				                                    			<select  id="processList">
+				                                    				<option value="0" th:text="#{generic.selectBusinessProcess}">Select business process..</option>
+									   								<option th:each="proc: ${listaAllBp}" th:text="${proc.name}"  th:value="${proc.id}"></option>
+								
+															  </select>
+															</div>	   
+<!-- 															<input id="idp" type="text" name="fieldId" th:placeholder="#{generic.id}" autocomplete="off"  class="form-control" value="0" hidden=true/>  -->
+															<label for="namep" th:text="#{generic.name}">Name:</label> 
+															<input id="namep" type="text" name="fieldName" th:placeholder="#{generic.name}" autocomplete="off"  class="form-control process" value="" /> 
+															<label for="descriptionp" th:text="#{generic.description}">Description:</label> 
+															<input id="descriptionp" type="text" name="fieldDescription" th:placeholder="#{generic.description}" autocomplete="off"  class="form-control process" value="" /> 
+															<label for="labelp" id="labp" th:text="#{generic.label}">Label:</label> 
+															<input id="labelp" type="text" name="fieldLabel"th:placeholder="#{generic.label}" autocomplete="off"  class="form-control process" value="" />
+				                                </div> <input type="button" name="previous" class="previous action-button-previous" value="Previous" /> <input type="button" name="next" class="next action-button" value="Next Step" />
+				                            </fieldset>
+				                            <fieldset name="subprocess">
+				                                <div class="form-card">
+				                                   
+				                                    		<div class="row">
+				                                    			<div class="col-lg-6">
+				                                    					 <h2 class="fs-title" th:text="#{generic.Subprocess}">Subprocess</h2> 
+				                                    			</div>
+				                                    			<label class="col-lg-2" for="subprocessList"  th:text="#{generic.SubprocessList}">Subprocess list:</label> 
+				                                    			<select  id="subprocessList">
+				                                    				<option value="0" th:text="#{generic.selectBusinessSubprocess}">Select business subprocess..</option>
+									   								<option th:each="proc: ${listaAllSubBp}" th:text="${proc.name}"  th:value="${proc.id}"></option>
+								
+															  </select>
+															</div>	   
+<!-- 				                                    		<input id="ids" type="text" name="fieldId" th:placeholder="#{generic.id}" autocomplete="off"  class="form-control" value="0" hidden=true/>  -->
+															<label for="names" th:text="#{generic.name}">Name:</label> 
+															<input id="names" type="text" name="fieldName" th:placeholder="#{generic.name}" autocomplete="off"  class="form-control subprocess" value="" /> 
+															<label for="descriptions" th:text="#{generic.description}">Description:</label> 
+															<input id="descriptions" type="text" name="fieldDescription" th:placeholder="#{generic.description}" autocomplete="off"  class="form-control subprocess" value="" /> 
+															<label for="labels" id="labs" th:text="#{generic.label}">Label:</label> 
+															<input id="labels" type="text" name="fieldLabel"th:placeholder="#{generic.label}" autocomplete="off"  class="form-control subprocess" value="" />
+				                                </div> <input type="button" name="previous" class="previous action-button-previous" value="Previous" /> <input type="button" name="next" class="next action-button" value="Next Step" />
+				                            </fieldset>
+				                            <fieldset name="step">
+				                                <div class="form-card">
+<!-- 				                                    <h2 class="fs-title" th:text="#{generic.Step}">Step</h2> -->
+<!-- 															<input id="idst" type="text" name="fieldId" th:placeholder="#{generic.id}" autocomplete="off"  class="form-control" value="" hidden=true/>  -->
+															<div class="row">
+				                                    			<div class="col-lg-6">
+				                                    					 <h2 class="fs-title" th:text="#{generic.Step}">Step</h2> 
+				                                    			</div>
+				                                    			<label class="col-lg-2" for="stepList"  th:text="#{generic.StepList}">Step list:</label> 
+				                                    			<select  id="stepList" >
+				                                    				<option value="0" th:text="#{generic.selectStep}">Select process step..</option>
+									   								<option th:each="proc: ${listaBusinessStep}" th:text="${proc.name}"  th:value="${proc.id}"></option>
+								
+															  </select>
+															</div>	 
+															
+															
+															
+															<label for="namest" th:text="#{generic.name}">Name:</label> 
+															<input id="namest" type="text" name="fieldName" th:placeholder="#{generic.name}" autocomplete="off"  class="form-control step" value="" /> 
+															<label for="descriptionst" th:text="#{generic.description}">Description:</label> 
+															<input id="descriptionst" type="text" name="fieldDescription" th:placeholder="#{generic.description}" autocomplete="off"  class="form-control step" value="" /> 
+				                                			<label for="labelst" id="labst" th:text="#{generic.label}">Label:</label> 
+															<input id="labelst" type="text" name="fieldLabel"th:placeholder="#{generic.label}" autocomplete="off"  class="form-control step" value="" />
+				                                			
+				                                			
+				                                			
+				                                			
+				                                			<label id="processLabel" for="businessProcedure" th:text="#{generic.businessService}">Service:</label>
+				                                			
+				                                			
+				                                			<select class="form-control step" id="businessService" name="fieldBusinessServiceId">
+																<option value="0" th:text="#{generic.selectBusinessService}">Select service..</option>
+																<option th:each="bp : ${listaAllBusinessService}" th:value="${bp.id}"
+																	th:text="${bp.Name}"></option>
+															</select>
+				                                
+				                                
+				                                </div> <input type="button" name="previous" class="previous action-button-previous" value="Previous" /> <input type="button" name="make_payment" class="next action-button" value="Confirm" />
+				                            </fieldset>
+				                            <fieldset name="result">
+				                                <div class="form-card">
+				                                    <h2 class="fs-title text-center" th:text="#{generic.Success}">Success !</h2> <br><br>
+				                                    <div class="row justify-content-center">
+				                                        <div class="col-3"> <img src="img/ok--v2.png" class="fit-image"> </div>
+				                                    </div> <br><br>
+				                                    <div class="row justify-content-center">
+				                                        <div class="col-7 text-center">
+				                                            <a th:href="@{/drivensettings}" th:text="#{generic.success.message}">You have successfully designed your process! click here for new process design</a>
+				                                        </div>
+				                                    </div>
+				                                </div>
+				                            </fieldset>
+				                        </form>
+				                    </div>
+				                </div>
+				            </div>
+				        </div>
+				    </div>
+				</div>
+			
+
+			</main>
+			
+		</div>
+		<footer th:replace="layout :: site-footer"></footer>
+	</div>
+</body>
+</html>

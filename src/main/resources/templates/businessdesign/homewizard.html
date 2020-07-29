@@ -1,0 +1,391 @@
+<!-- 
+ Copyright 2019 ISTAT
+
+ Licensed under the EUPL, Version 1.1 or � as soon they will be approved by
+ the European Commission - subsequent versions of the EUPL (the "Licence");
+ You may not use this work except in compliance with the Licence. You may
+ obtain a copy of the Licence at:
+
+ http://ec.europa.eu/idabc/eupl5
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the Licence is distributed on an "AS IS" basis, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ Licence for the specific language governing permissions and limitations under
+ the Licence.
+
+ @author Francesco Amato <framato @ istat.it>
+ @author Mauro Bruno <mbruno @ istat.it>
+ @author Paolo Francescangeli  <pafrance @ istat.it>
+ @author Renzo Iannacone <iannacone @ istat.it>
+ @author Stefano Macone <macone @ istat.it>
+ @version 1.0
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<head th:include="layout :: site-head" th:remove="tag" />
+
+
+
+<link th:href="@{/css/businessdesign/wizard.css}" rel="stylesheet" />
+<script th:src="@{/js/servicedesign/wizard.js}"></script>
+<script th:inline="javascript">
+	var _mandatory_name_field = [[#{as.field.name.mandatory}]];
+	var _mandatory_method_field = [[#{si.field.method.mandatory}]];
+</script>
+
+</head>
+<body class="c-app">
+	<div th:replace="layout :: site-aside"></div>
+	<div th:replace="layout :: site-modals"></div>
+
+	<div class="c-wrapper">
+		<header
+			class="c-header c-header-light c-header-fixed c-header-with-subheader">
+			<div th:include="layout :: site-header" th:remove="tag"></div>
+			<div class="c-subheader justify-content-between px-3">
+				<!-- Breadcrumb-->
+				<ol class="breadcrumb border-0 m-0">
+					<li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+					<li class="breadcrumb-item"><span th:text="#{sd.home.link}">Services
+							design</span></li>
+				</ol>
+				<!-- Right navigation menu -->
+				<div class="c-header-nav d-md-down-none mfe-2">
+					<a class="c-header-nav-link" th:title="#{session.button.close}"
+						th:href="@{'/'}"> <i class="fa fa-close"></i>&nbsp;<span
+						th:text="#{Layout.Close}"></span>
+					</a>
+				</div>
+			</div>
+		</header>
+
+		<div class="c-body">
+			<main class="c-main">
+				<div class="container-fluid">
+					<div class="row justify-start">
+
+						<div class="col-lg-8">
+
+
+
+
+							<!-- TEST WIZARD -->
+
+							<!-- MultiStep Form -->
+
+
+							<!-- MultiStep Form -->
+							<div class="container-fluid" id="grad1">
+								<div class="row justify-content-center mt-0">
+									<div
+										class="col-11 col-sm-9 col-md-7 col-lg-9 text-center p-0 mt-3 mb-2">
+										<div class="card px-0 pt-5 pb-0 mt-3 mb-3">
+											<h2>
+												<strong><span th:text="#{service.wizard.title}">Wizard to create new services</span></strong>
+											</h2>
+											<p th:text="#{service.fill.form.message}">Fill mandatory fields to go to next step</p>
+											<div class="row">
+												<div class="col-md-12 mx-0">
+													<form th:action="@{/saveallservices}" id="msform" method="post">
+														<input type="hidden" id="selservice" name="selected"
+															value="0" /> <input type="hidden" id="inputerror"
+															name="inputerror" value="0" />
+														<!-- progressbar -->
+														<ul id="progressbar">
+															<li class="active" id="bservice">Business Service</li>
+															<li id="appservice">Application Service</li>
+															<li id="stepinstance">Step Instance</li>
+															<li id="confirm"><strong>Finish</strong></li>
+														</ul>
+														<!-- fieldsets -->
+														<fieldset name="bservice">
+															<div class="form-card">
+																<div class="row">
+																	<div class="col-lg-6">
+																		<h2 class="fs-title">Business Service</h2>
+																	</div>
+																		<label class="col-lg-2" for="functionList" th:text="#{bs.business.service.label}">B.S. list:</label>
+																		<div class="form-group">
+																			<div id="select-bservice-div">
+																				<label class="control-label"
+																					th:text="#{bs.business.service.select.label}"><span>Select
+																						Business Service</span> </label> <select name="idbservice"
+																					th:title="#{bs.business.service.select.label}"
+																					class="form-control">
+																					<option th:each="bService : ${listaBService}"
+																						th:value="${bService.id}" th:text="${bService.name}" />
+																				</select><span class="help-block"></span>
+																			</div>
+																		</div>
+																</div>
+																<!-- form th:action="@{/newbservice}" id="bs-form"
+																	class="form-horizontal" method="post"-->
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{generic.label.name}+'*'"><span>Nome</span></label>
+
+																	<input name="nameb" id="bs-name"
+																		th:title="#{generic.label.name}" class="form-control"
+																		type="text" th:placeholder="#{generic.label.name}" />
+																	<span class="help-block"> <small
+																		class="text-danger" id="bs-name-error"></small>
+																	</span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{nuova.sessione.descr}"> <span>Descrizione</span>
+																	</label> <input name="descriptionb"
+																		th:placeholder="#{generic.label.description}"
+																		th:title="#{generic.label.description}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div id="preparing-select-js-parent">
+																	<div class="form-group" id="select-gsbpm-1-div">
+																		<label class="control-label"
+																			th:text="#{bs.gsbpm.label}"><span>Processo
+																				Gsbpm padre</span> </label> <select name="gsbpmidparent"
+																			id="select-gsbpm-1" th:title="#{bs.gsbpm.label}"
+																			class="form-control">
+																			<option th:each="gsbpm : ${listaGsbpmParentProcess}"
+																				th:value="${gsbpm.id}" th:text="${gsbpm.name}" />
+																		</select><span class="help-block"></span>
+
+																	</div>
+																</div>
+																<div id="preparing-select-js">
+																	<div class="form-group" id="select-gsbpm-2-div">
+																		<label class="control-label"
+																			th:text="#{bs.gsbpm.label}"><span>Processo
+																				Gsbpm figlio</span> </label> <select name="gsbpmid"
+																			id="select-gsbpm-2" th:title="#{bs.gsbpm.label}"
+																			class="form-control">
+																			<option th:each="gsbpm : ${listaGsbpmSubProcess}"
+																				th:value="${gsbpm.id}" th:text="${gsbpm.name}" />
+																		</select><span class="help-block"></span>
+
+																	</div>
+																</div>
+
+																<!-- /form-->
+															</div>
+															<input type="button" name="next"
+																class="next action-button" value="Next Step" />
+														</fieldset>
+														<fieldset name="appservice">
+															<div class="form-card">
+																<h2 class="fs-title">Application Service</h2>
+																<!-- form th:action="@{/newappservice}" id="as-form"
+																th:if="${applicationService == 'null'}" class="form-horizontal"
+																method="post" -->
+
+
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{generic.label.name}+'*'"><span>Nome</span></label>
+																	<input name="namea" id="as-name"
+																		th:placeholder="#{generic.label.name}"
+																		th:title="#{generic.label.name}" class="form-control"
+																		type="text" /> <span class="help-block"> <small
+																		class="text-danger" id="as-name-error"></small>
+																	</span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{nuova.sessione.descr}"> <span>Descrizione</span>
+																	</label> <input name="descriptiona"
+																		th:placeholder="#{generic.label.description}"
+																		th:title="#{generic.label.description}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.impl.language.label}"><span>Impl.
+																			language</span> </label> <input name="language"
+																		th:placeholder="#{as.impl.language.label}"
+																		th:title="#{as.impl.language.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.engine.label}"><span>Motore</span>
+																	</label> <input name="engine" th:title="#{as.engine.label}"
+																		th:placeholder="#{as.engine.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.source.path.label}"><span>Percorso</span>
+																	</label> <input name="sourcepath"
+																		th:title="#{as.source.path.label}"
+																		th:placeholder="#{as.source.path.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.source.code.label}"><span>Codice</span>
+																	</label> <input name="sourcecode"
+																		th:title="#{as.source.code.label}"
+																		th:placeholder="#{as.source.code.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.author.label}"><span>Autore</span>
+																	</label> <input name="author" th:title="#{as.author.label}"
+																		th:placeholder="#{as.author.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.licence.label}"><span>Licenza</span>
+																	</label> <input name="licence" th:title="#{as.licence.label}"
+																		th:placeholder="#{as.licence.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{as.contact.label}"><span>Contatto</span>
+																	</label> <input name="contact" th:title="#{as.contact.label}"
+																		th:placeholder="#{as.contact.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<div id="select-bservice-div">
+																		<label class="control-label"
+																			th:text="#{as.busines.service.link.label}"><span>Collega
+																				Business Service</span> </label> <select name="idbservice"
+																			th:title="#{as.busines.service.link.label}"
+																			class="form-control">
+																			<option th:each="bService : ${listaBService}"
+																				th:value="${bService.id}" th:text="${bService.name}" />
+																		</select><span class="help-block"></span>
+																	</div>
+																</div>
+
+																<!-- /form -->
+
+
+															</div>
+															<input type="button" name="previous"
+																class="previous action-button-previous" value="Previous" />
+															<input type="button" name="next"
+																class="next action-button" value="Next Step" />
+														</fieldset>
+														<fieldset name="stepinstance">
+															<div class="form-card">
+																<h2 class="fs-title">Step Instance</h2>
+
+
+																<!-- CREATE new StepInstance -->
+
+																<!-- form th:action="@{/newstepinstance}" id="si-form"
+																	th:if="${stepInstance == 'null'}"
+																	class="form-horizontal" method="post"-->
+
+
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{si.method.label}+'*'"><span>Method</span></label>
+																	<input name="method" id="si-method"
+																		th:placeholder="#{si.method.label}"
+																		th:title="#{si.method.label}" class="form-control"
+																		type="text" /> <span class="help-block"> <small
+																		class="text-danger" id="si-method-error"></small>
+																	</span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{generic.label.description}"> <span>Descrizione</span>
+																	</label> <input name="descriptions"
+																		th:placeholder="#{generic.label.description}"
+																		th:title="#{generic.label.description}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<label class="control-label"
+																		th:text="#{si.label.label}"> <span>Label</span>
+																	</label> <input name="label" th:title="#{si.label.label}"
+																		th:placeholder="#{si.label.label}"
+																		class="form-control" type="text" /> <span
+																		class="help-block"></span>
+																</div>
+																<div class="form-group">
+																	<div id="select-appservice-div">
+																		<label class="control-label"
+																			th:text="#{si.appservice.link.label}"><span>Collega
+																				App. Service</span> </label> <select name="appserviceid"
+																			th:title="#{si.appservice.link.label}"
+																			class="form-control">
+																			<option th:each="appService : ${listaAppService}"
+																				th:value="${appService.id}"
+																				th:text="${appService.name}" />
+																		</select><span class="help-block"></span>
+																	</div>
+																</div>
+
+																<!-- /form-->
+															</div>
+															<input type="button" name="previous"
+																class="previous action-button-previous" value="Previous" />
+															<input type="button" name="make_payment"
+																class="next action-button" value="Confirm" />
+														</fieldset>
+														<fieldset name="success">
+															<div class="form-card">
+																<h2 class="fs-title text-center">Success !</h2>
+																<br> <br>
+																<div class="row justify-content-center">
+																	<div class="col-3">
+																		<img
+																			src="img/ok--v2.png"
+																			class="fit-image">
+																	</div>
+																</div>
+																<br> <br>
+																<div class="row justify-content-center">
+																	<div class="col-7 text-center">
+																		<a th:href="@{/busservwizard}"
+																			th:text="#{service.success.saved.message}">You have successfully added your service! Click here to add a new service</a>
+																	</div>
+																</div>
+															</div>
+														</fieldset>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+						</div>
+					</div>
+				</div>
+			</main>
+
+
+
+		</div>
+		<!-- End body -->
+		<footer th:replace="layout :: site-footer"></footer>
+
+
+
+	</div>
+</body>
+</html>
+

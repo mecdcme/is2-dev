@@ -1,0 +1,221 @@
+<!-- 
+ Copyright 2019 ISTAT
+
+ Licensed under the EUPL, Version 1.1 or � as soon they will be approved by
+ the European Commission - subsequent versions of the EUPL (the "Licence");
+ You may not use this work except in compliance with the Licence. You may
+ obtain a copy of the Licence at:
+
+ http://ec.europa.eu/idabc/eupl5
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the Licence is distributed on an "AS IS" basis, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ Licence for the specific language governing permissions and limitations under
+ the Licence.
+
+ @author Francesco Amato <framato @ istat.it>
+ @author Mauro Bruno <mbruno @ istat.it>
+ @author Paolo Francescangeli  <pafrance @ istat.it>
+ @author Renzo Iannacone <iannacone @ istat.it>
+ @author Stefano Macone <macone @ istat.it>
+ @version 1.0
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <head th:include="layout :: site-head" th:remove="tag"/> 
+        <script th:src="@{/js/user.js}"></script>
+    </head>
+    <body class="c-app">
+        <div th:replace="layout :: site-aside"></div>
+        <div th:replace="layout :: site-modals"></div>
+
+        <div class="c-wrapper">
+            <header class="c-header c-header-light c-header-fixed c-header-with-subheader">
+                <div th:include="layout :: site-header" th:remove="tag"></div>
+                <div class="c-subheader justify-content-between px-3">
+                    <!-- Breadcrumb-->
+                    <ol class="breadcrumb border-0 m-0">
+                        <li class="breadcrumb-item">
+                            <a th:title="#{home.link.title}" th:href="@{/}">Home</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <span th:text="#{Layout.edituser}"></span>
+                        </li>
+                    </ol>
+                    <!-- Right navigation menu -->
+                    <div class="c-header-nav d-md-down-none mfe-2">
+                        <a class="c-header-nav-link" th:title="#{session.button.close}" th:href="@{'/'}">
+                            <i class="fa fa-close"></i>&nbsp;<span th:text="#{Layout.Close}"></span>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="c-body">
+                <main class="c-main">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <span th:text="#{Layout.edituser}">Modifica  utente</span>
+                                             
+                                        </div>
+                                        <div class="card-body">                                    
+                                        <form action="#" th:action="@{/users/edituser}" 
+                                              th:object="${userCreateForm}" method="post">
+                                            <div class="form-body">
+                                              <div class="form-group row ">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-3">
+                                                            <label class="control-label">Email*</label>
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <span class="error text-danger"
+                                                                  th:if="${#fields.hasErrors('email')}" 
+                                                                  th:errors="*{email}">
+                                                            </span>
+                                                            <input name="email" placeholder="Email"
+                                                                   class="form-control"
+                                                                   th:field="*{email}" 
+                                                                   type="text" 
+                                                                   readonly="readonly" />
+                                                            <span class="help-block"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-3">
+                                                            <label class="control-label"><span th:text="#{Edituser.name}">Name*</span></label>
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <span class="error text-danger"
+                                                                  th:if="${#fields.hasErrors('name')}"
+                                                                  th:errors="*{name}"></span>
+                                                            <input name="name" placeholder="Name" 
+                                                                   class="form-control" title="Name" data-toggle="tooltip"
+                                                                   th:field="*{name}" type="text" />
+                                                            <span class="help-block"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-3">
+
+                                                            <label class="control-label"><span th:text="#{Edituser.surname}">Surname*</span></label>
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <span class="error text-danger"
+                                                                  th:if="${#fields.hasErrors('surname')}"
+                                                                  th:errors="*{surname}">                                                              
+                                                            </span>
+                                                            <input name="surname"  title="Surname"
+                                                                   placeholder="Surname" th:field="*{surname}"
+                                                                   class="form-control" type="text" />
+                                                            <span class="help-block"></span>
+                                                        </div>
+                                                    </div> 
+                                                </div>
+                                                <div class="form-group row">
+                                                    <div class="col-md-12">
+                                                        <div class="col-md-3">
+                                                            <label class="control-label"><span th:text="#{Edituser.role}">Role</span></label>
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <span class="error text-danger"
+                                                                  th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></span>
+                                                            <input class="form-control" type="text" th:field="*{role}"
+                                                                   readonly="readonly" sec:authorize="!hasAuthority('ADMIN')" />
+
+                                                            <select th:field="*{role}" name="role"
+                                                                    sec:authorize="hasAuthority('ADMIN')" 
+                                                                    class="form-control">
+                                                                <option th:each="rolei : ${allRoles}" 
+                                                                        th:value="${rolei.id}"
+                                                                        th:text="${rolei.role}"></option>
+                                                            </select>
+                                                            <span class="help-block"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" th:field="*{id}" /> 
+                                                <input type="hidden" name="password" value="password" />
+                                            </div>
+                                            <div class="modal-footer">
+                                                <div class="col-lg-12">
+                                                    <button type="submit" id="btnSave" 
+                                                            class="btn btn-primary"><span th:text="#{Edituser.save}">Save</span></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>                           
+                            </div>
+
+                            <div class="col-lg-5">
+                                   <div class="card">
+                                        <div class="card-header">
+                                            <span th:text="#{Edituser.changepassword}">Cambia password</span>
+                                            
+                                        </div>
+                                        <div class="card-body">
+                                        <div class="form-body">
+                                            <div class="form-group row ">
+                                                <div class="col-md-10">
+                                                    <div id="msgs"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <div class="col-md-12">
+                                                    <div class="col-md-3">
+                                                        <label class="control-label ">Password</label>
+                                                    </div>
+
+                                                    <div class="col-md-9">
+                                                        <input id="password" placeholder="Password"
+                                                               class="form-control" type="password" /> <span
+                                                               class="help-block"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="control-group error form-group row ">
+                                                <div class="col-md-12">
+                                                    <div class="col-md-3">
+                                                        <label class="control-label "><span th:text="#{Edituser.repeat}">Repeat Password</span></label>
+                                                    </div>
+                                                    <div class="col-md-9">
+                                                        <input id="password1" placeholder="Repeat Password"
+                                                               class="form-control" type="password" /> <span
+                                                               class="help-block"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="col-lg-12">
+                                                <button type="submit" id="btnChangePassword"
+                                                        disabled="disabled" class="btn btn-primary"
+                                                        onclick="update_mypassword()"><span th:text="#{Edituser.change}">Change</span></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                     </main>
+            </div>
+            <!-- End body -->
+            <!-- END MAIN CONTAINER -->
+            <footer th:replace="layout :: site-footer" />
+        </div>
+        <!-- wrapper -->
+    </body>
+</html>
+

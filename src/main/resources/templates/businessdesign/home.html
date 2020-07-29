@@ -1,0 +1,749 @@
+<!-- 
+ Copyright 2019 ISTAT
+
+ Licensed under the EUPL, Version 1.1 or � as soon they will be approved by
+ the European Commission - subsequent versions of the EUPL (the "Licence");
+ You may not use this work except in compliance with the Licence. You may
+ obtain a copy of the Licence at:
+
+ http://ec.europa.eu/idabc/eupl5
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the Licence is distributed on an "AS IS" basis, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ Licence for the specific language governing permissions and limitations under
+ the Licence.
+
+ @author Francesco Amato <framato @ istat.it>
+ @author Mauro Bruno <mbruno @ istat.it>
+ @author Paolo Francescangeli  <pafrance @ istat.it>
+ @author Renzo Iannacone <iannacone @ istat.it>
+ @author Stefano Macone <macone @ istat.it>
+ @version 1.0
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<head th:include="layout :: site-head" th:remove="tag" />
+<script th:inline="javascript">
+	var _remove_bs_msg_dialog = [[#{dialog.elimination.bs.message}]];
+	var _mandatory_name_field = [[#{as.field.name.mandatory}]];
+	var _mandatory_method_field = [[#{si.field.method.mandatory}]];
+	var _remove_as_msg_dialog = [[#{dialog.elimination.as.message}]];
+	var _remove_si_msg_dialog = [[#{dialog.elimination.si.message}]];
+	var _selectedTab = [[${selectedTab}]];
+</script>
+<script th:src="@{/js/vendors/table/datatables.min.js}"></script>
+<script th:src="@{/js/user/usersList.js}"></script>
+<script th:src="@{/js/servicedesign/servicedesign.js}"></script>
+<link th:href="@{/css/vendors/table/datatables.css}" rel="stylesheet" />
+</head>
+<body class="c-app">
+	<div th:replace="layout :: site-aside"></div>
+	<div th:replace="layout :: site-modals"></div>
+
+	<div class="c-wrapper">
+		<header
+			class="c-header c-header-light c-header-fixed c-header-with-subheader">
+			<div th:include="layout :: site-header" th:remove="tag"></div>
+			<div class="c-subheader justify-content-between px-3">
+				<!-- Breadcrumb-->
+				<ol class="breadcrumb border-0 m-0">
+					<li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+					<li class="breadcrumb-item"><span th:text="#{sd.home.link}">Services design</span></li>
+				</ol>
+				<!-- Right navigation menu -->
+				<div class="c-header-nav d-md-down-none mfe-2">
+					<a class="c-header-nav-link" th:title="#{session.button.close}"
+						th:href="@{'/'}"> <i class="fa fa-close"></i>&nbsp;<span
+						th:text="#{Layout.Close}"></span>
+					</a>
+				</div>
+			</div>
+		</header>
+
+		<div class="c-body">
+			<main class="c-main">
+				<div class="container-fluid">
+					<div class="row justify-start">
+
+						<div class="col-lg-8">
+
+
+							<div class="row">
+
+
+
+								<ul class="nav nav-tabs" id="myTab" role="tablist">
+									<li class="nav-item"><a class="nav-link" id="business-tab"
+										data-toggle="tab" href="#businessTab" role="tab"
+										aria-controls="businessTab" aria-selected="true"
+										th:text="#{bs.tab.label}">Business Service</a></li>
+									<li class="nav-item"><a class="nav-link"
+										id="application-tab" data-toggle="tab" href="#applicationTab"
+										role="tab" aria-controls="applicationTab" aria-selected="false"
+										th:text="#{as.tab.label}">Application Service</a></li>
+									<li class="nav-item"><a class="nav-link" id="step-tab"
+										data-toggle="tab" href="#stepTab" role="tab"
+										aria-controls="stepTab" aria-selected="false"
+										th:text="#{si.tab.label}">Step Instance</a></li>
+								</ul>
+
+							</div>
+
+							<div class="tab-content" id="myTabContent">
+
+								<!-- Business Service list -->
+
+								<div class="tab-pane fade" id="businessTab" role="tabpanel"
+									aria-labelledby="business-tab">
+									<div class="card">
+										<div class="card-header">
+											<span th:text="#{bs.list.title.label}"></span>
+											<div class="card-header-actions">
+
+												<a class="card-header-action" href="javascript:void(0)"
+													onclick="javascript:open_business_edit('null');"
+													th:title="#{bs.label.create.new}"> <i
+													class="fa fa-plus-square-o"></i> <span
+													th:text="#{bs.label.create.new}">New Business
+														Service</span>
+												</a>
+											</div>
+										</div>
+										<div class="card-body">
+											<table id="functionsTabList"
+												class="table table-striped table-bordered">
+												<thead>
+													<tr>
+														<th><span th:text="#{generic.label.id}">ID</span></th>
+														<th><span th:text="#{generic.label.name}">NOME</span></th>
+														<th><span th:text="#{generic.label.description}">DESCRIZIONE</span></th>
+														<th><span th:text="#{bs.gsbpm.label}">GSBPM</span></th>
+														<th style="width: 1%"></th>
+														<th style="width: 1%"></th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="bservice: ${listaBService}">
+														<td th:text="${bservice.id}"></td>
+														<td th:text="${bservice.name}"></td>
+														<td th:text="${bservice.descr}"></td>
+														<td th:text="${bservice.gsbpmProcess.name}"></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.upd.bs}"
+															th:attr="onclick='javascript:open_business_edit(' + ${bservice.id} + ')'">
+																<i class="fa fa-pencil"></i>
+														</a></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.delete.bs}"
+															th:attr="onclick='javascript:deleteBusinessService(' + ${bservice.id} + ', \'' + ${bservice.name} + '\',\'' + ${bservice.descr} + '\', \''  + 'null' +'\')'">
+																<i class="fa fa-trash-o"></i>
+														</a></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+
+
+								<!-- App Service list -->
+								<div class="tab-pane fade" id="applicationTab" role="tabpanel"
+									aria-labelledby="application-tab">
+									<div class="card">
+										<div class="card-header">
+											<span th:text="#{as.list.title.label}">App Service</span>
+											<div class="card-header-actions">
+
+												<a class="card-header-action" href="javascript:void(0)"
+													onclick="javascript:openAppServiceEditPage('null');"
+													th:title="#{as.label.create.new}"> <i
+													class="fa fa-plus-square-o"></i> <span
+													th:text="#{as.label.create.new}">New Application
+														Service</span>
+												</a>
+											</div>
+										</div>
+										<div class="card-body">
+											<table id="functionsTabList"
+												class="table table-striped table-bordered">
+												<thead>
+													<tr>
+														<th><span th:text="#{generic.label.id}">ID</span></th>
+														<th><span th:text="#{generic.label.name}">NOME</span></th>
+														<th><span th:text="#{generic.label.description}">DESCRIZIONE</span></th>
+														<th><span th:text="#{as.impl.language.label}">IMPL.
+																LANGUAGE</span></th>
+														<th><span th:text="#{as.engine.label}">ENGINE</span></th>
+														<th><span th:text="#{as.author.label}">AUTORE</span></th>
+
+														<th style="width: 1%"></th>
+														<th style="width: 1%"></th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="appservice: ${listaAppService}">
+														<td th:text="${appservice.id}"></td>
+														<td th:text="${appservice.name}"></td>
+														<td th:text="${appservice.descr}"></td>
+														<td th:text="${appservice.language}"></td>
+														<td th:text="${appservice.engineType}"></td>
+														<td th:text="${appservice.author}"></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.upd.as}"
+															th:attr="onclick='javascript:openAppServiceEditPage(' + ${appservice.id} + ')'">
+																<i class="fa fa-pencil"></i>
+														</a></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.delete.as}"
+															th:attr="onclick='javascript:deleteAppService(' + ${appservice.id} + ', \'' + ${appservice.name} + '\',\'' + ${appservice.descr} + '\', \''  + 'null' +'\')'">
+																<i class="fa fa-trash-o"></i>
+														</a></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+
+
+								<!-- Step Instance list -->
+								<div class="tab-pane fade" id="stepTab" role="tabpanel"
+									aria-labelledby="step-tab">
+									<div class="card">
+										<div class="card-header">
+											<span th:text="#{si.list.title.label}">Step Instance</span>
+											<div class="card-header-actions">
+
+												<a class="card-header-action" href="javascript:void(0)"
+													onclick="javascript:openStepInstanceEditPage('null');"
+													th:title="#{as.label.create.new}"> <i
+													class="fa fa-plus-square-o"></i> <span
+													th:text="#{si.label.create.new}">New Step Instance</span>
+												</a>
+											</div>
+										</div>
+										<div class="card-body">
+											<table id="functionsTabList"
+												class="table table-striped table-bordered">
+												<thead>
+													<tr>
+														<th><span th:text="#{generic.label.id}">ID</span></th>
+														<th><span th:text="#{generic.label.name}">MTHOD</span></th>
+														<th><span th:text="#{generic.label.description}">DESCRIPTION</span></th>
+														<th><span th:text="#{as.impl.language.label}">LABEL</span></th>
+														<th style="width: 1%"></th>
+														<th style="width: 1%"></th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr th:each="stepInstance: ${listaStepInstance}">
+														<td th:text="${stepInstance.id}"></td>
+														<td th:text="${stepInstance.method}"></td>
+														<td th:text="${stepInstance.descr}"></td>
+														<td th:text="${stepInstance.label}"></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.upd.si}"
+															th:attr="onclick='javascript:openStepInstanceEditPage(' + ${stepInstance.id} + ')'">
+																<i class="fa fa-pencil"></i>
+														</a></td>
+
+														<td><a href="javascript:void(0)" role="button"
+															th:title="#{link.title.delete.si}"
+															th:attr="onclick='javascript:deleteStepInstance(' + ${stepInstance.id} + ', \'' + ${stepInstance.method} + '\',\'' + ${stepInstance.descr} + '\', \''  + 'null' +'\')'">
+																<i class="fa fa-trash-o"></i>
+														</a></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+
+
+							</div>
+
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+		<!-- End body -->
+		<footer th:replace="layout :: site-footer"></footer>
+
+		<!-- New business service modal -->
+		<div class="modal fade" id="new-bservice-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/newbservice}" id="bs-form"
+						class="form-horizontal" method="post">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.new.bs}">New Business Service</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							<div class="form-group">
+								<label class="control-label" th:text="#{generic.label.name}+'*'"><span>Nome</span></label>
+								<input name="name" id="bs-name" th:title="#{generic.label.name}"
+									class="form-control" type="text" /> <span class="help-block">
+									<small class="text-danger" id="bs-name-error"></small>
+								</span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{nuova.sessione.descr}">
+									<span>Descrizione</span>
+								</label> <input name="description"
+									th:title="#{generic.label.description}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{bs.gsbpm.label}"><span>Processo
+										Gsbpm</span> </label> <select name="gsbpmid" th:title="#{bs.gsbpm.label}"
+									class="form-control">
+									<option th:each="gsbpm : ${listaAllGsbpmProcess}"
+										th:value="${gsbpm.id}" th:text="${gsbpm.name}" />
+								</select><span class="help-block"></span>
+
+							</div>
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-bs" class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Update business service modal -->
+		<div class="modal fade" id="update-bservice-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/updatebservice}" id="upd-bs-form"
+						class="form-horizontal" method="post">
+						<input name="bserviceid" id="up-bs-id" type="hidden" />
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.upd.bs}">Update Business Service</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							<div class="form-group">
+								<label class="control-label" th:text="#{generic.label.name}+'*'"><span>Nome</span></label>
+								<input name="name" id="up-bs-name"
+									th:title="#{generic.label.name}" class="form-control"
+									type="text" /> <span class="help-block"> <small
+									class="text-danger" id="up-bs-name-error"></small>
+								</span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{generic.label.description}"> <span>Descrizione</span>
+								</label> <input name="description" id="up-bs-description"
+									th:title="#{generic.label.description}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{bs.gsbpm.label}"><span>Processo
+										Gsbpm</span> </label> <select name="gsbpmid" id="up-bs-gsbpm"
+									th:title="#{bs.gsbpm.label}" class="form-control">
+									<option th:each="gsbpm : ${listaAllGsbpmProcess}"
+										th:value="${gsbpm.id}" th:text="${gsbpm.name}" />
+								</select>
+
+							</div>
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-upd-bs"
+							class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- New app service modal -->
+		<div class="modal fade" id="new-app-service-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/newappservice}" id="as-form"
+						class="form-horizontal" method="post">
+
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.new.as}">New Application Service</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-as" class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Update app service modal -->
+		<div class="modal fade" id="update-app-service-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/updateappservice}" id="upd-as-form"
+						class="form-horizontal" method="post">
+						<input type="hidden" name="appserviceupdateid" id="upd-as-id" />
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.upd.as}">Update Application
+									Service</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							<div class="form-group">
+								<label class="control-label" th:text="#{generic.label.name}+'*'"><span>Nome</span></label>
+								<input name="name" id="upd-as-name"
+									th:title="#{generic.label.name}" class="form-control"
+									type="text" /> <span class="help-block"> <small
+									class="text-danger" id="upd-as-name-error"></small>
+								</span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{nuova.sessione.descr}">
+									<span>Descrizione</span>
+								</label> <input name="description" id="upd-as-description"
+									th:title="#{generic.label.description}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.impl.language.label}"><span>Impl.
+										language</span> </label> <input name="language" id="upd-as-language"
+									th:title="#{as.impl.language.label}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.engine.label}"><span>Motore</span>
+								</label> <input name="engine" th:title="#{as.engine.label}"
+									id="upd-as-engine" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.source.path.label}"><span>Percorso</span>
+								</label> <input name="sourcepath" th:title="#{as.source.path.label}"
+									id="upd-as-sourcepath" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.source.code.label}"><span>Codice</span>
+								</label> <input name="sourcecode" th:title="#{as.source.code.label}"
+									id="upd-as-sourcecode" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.author.label}"><span>Autore</span>
+								</label> <input name="author" th:title="#{as.author.label}"
+									id="upd-as-author" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.licence.label}"><span>Licenza</span>
+								</label> <input name="licence" th:title="#{as.licence.label}"
+									id="upd-as-licence" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{as.contact.label}"><span>Contatto</span>
+								</label> <input name="contact" th:title="#{as.contact.label}"
+									id="upd-as-contact" class="form-control" type="text" /> <span
+									class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{as.busines.service.link.label}"><span>Collega
+										Business Service</span> </label> <select name="idbservice" id="upd-as-select"
+									th:title="#{as.busines.service.link.label}"
+									class="form-control">
+									<option th:each="bService : ${listaBService}"
+										th:value="${bService.id}" th:text="${bService.name}" />
+								</select><span class="help-block"></span>
+
+							</div>
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-as-upd"
+							class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- New step instance modal -->
+		<div class="modal fade" id="new-step-instance-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/newstepinstance}" id="si-form"
+						class="form-horizontal" method="post">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.new.si}">New Step Instance</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							<div class="form-group">
+								<label class="control-label" th:text="#{si.method.label}+'*'"><span>Method</span></label>
+								<input name="method" id="si-method"
+									th:title="#{si.method.label}" class="form-control" type="text" />
+								<span class="help-block"> <small class="text-danger"
+									id="si-method-error"></small>
+								</span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{generic.label.description}"> <span>Descrizione</span>
+								</label> <input name="description"
+									th:title="#{generic.label.description}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{si.label.label}">
+									<span>Label</span>
+								</label> <input name="label" th:title="#{si.label.label}"
+									class="form-control" type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{si.appservice.link.label}"><span>Collega
+										App. Service</span> </label> <select name="idappservice"
+									th:title="#{si.appservice.link.label}" class="form-control">
+									<option th:each="appService : ${listaAppService}"
+										th:value="${appService.id}" th:text="${appService.name}" />
+								</select><span class="help-block"></span>
+
+							</div>
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-si" class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Update step instance modal -->
+		<div class="modal fade" id="update-step-instance-modal" role="dialog">
+			<div class="modal-dialog " role="document">
+				<div class="modal-content ">
+					<form th:action="@{/updatestepinstance}" id="upd-si-form"
+						class="form-horizontal" method="post">
+						<input type="hidden" name="idstepinstance"
+							id="id-upd-step-instance" />
+						<div class="modal-header">
+							<h5 class="modal-title">
+								<i class="fa fa-folder-open"></i> <span
+									th:text="#{dialog.title.upd.si}">Update Step Instance</span>
+							</h5>
+							<button type="button" class="close" data-dismiss="modal"
+								aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body form">
+							<div class="form-group">
+								<label class="control-label" th:text="#{si.method.label}+'*'"><span>Method</span></label>
+								<input name="method" id="upd-si-method"
+									th:title="#{si.method.label}" class="form-control" type="text" />
+								<span class="help-block"> <small class="text-danger"
+									id="upd-si-method-error"></small>
+								</span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{generic.label.description}"> <span>Descrizione</span>
+								</label> <input name="description" id="upd-si-description"
+									th:title="#{generic.label.description}" class="form-control"
+									type="text" /> <span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label" th:text="#{si.label.label}">
+									<span>Label</span>
+								</label> <input name="label" id="upd-si-label"
+									th:title="#{si.label.label}" class="form-control" type="text" />
+								<span class="help-block"></span>
+							</div>
+							<div class="form-group">
+								<label class="control-label"
+									th:text="#{si.appservice.link.label}"><span>Collega
+										App. Service</span> </label> <select name="idappservice"
+									th:title="#{si.appservice.link.label}"
+									id="select-si-upd-appservice" class="form-control">
+									<option th:each="appService : ${listaAppService}"
+										th:value="${appService.id}" th:text="${appService.name}" />
+								</select><span class="help-block"></span>
+
+							</div>
+						</div>
+					</form>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-light" data-dismiss="modal">
+							<span th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</span>
+						</button>
+						<button type="button" id="btn-submit-upd-si"
+							class=" btn btn-primary">
+							<span th:title="#{session.button.save}"
+								th:text="#{session.button.save}">Salva</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Delete Business Service modal -->
+		<div class="modal fade" id="modalDeleteBS" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">
+							<i class="fa fa-trash"></i>&nbsp;<span
+								th:text="#{confirm.elimination.title}">Conferma
+								eliminazione</span>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body" id="del_bs_msg">Eliminare il Business
+						Service?</div>
+					<div class="modal-footer">
+						<input type="hidden" name="" id="id_bs_delete" value="" />
+						<button type="button" class="btn btn-light" data-dismiss="modal"
+							th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</button>
+						<button type="button" id="btn_delete_bs"
+							class="btn btn-primary towait" data-dismiss="modal"
+							th:title="#{generic.delete.button.label}"
+							th:text="#{generic.delete.button.label}">Elimina</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Delete App Service modal -->
+		<div class="modal fade" id="modalDeleteAS" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">
+							<i class="fa fa-trash"></i>&nbsp;<span
+								th:text="#{confirm.elimination.title}">Conferma
+								eliminazione</span>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body" id="del_as_msg">Eliminare
+						l'Application Service?</div>
+					<div class="modal-footer">
+						<input type="hidden" name="" id="id_as_delete" value="" />
+						<button type="button" class="btn btn-light" data-dismiss="modal"
+							th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</button>
+						<button type="button" id="btn_delete_as"
+							class="btn btn-primary towait" data-dismiss="modal"
+							th:title="#{generic.delete.button.label}"
+							th:text="#{generic.delete.button.label}">Elimina</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Delete Step Instance modal -->
+		<div class="modal fade" id="modalDeleteSI" tabindex="-1" role="dialog"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">
+							<i class="fa fa-trash"></i>&nbsp;<span
+								th:text="#{confirm.elimination.title}">Conferma
+								eliminazione</span>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal"
+							aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body" id="del_si_msg">Eliminare la Step
+						Instance</div>
+					<div class="modal-footer">
+						<input type="hidden" name="" id="id_si_delete" value="" />
+						<button type="button" class="btn btn-light" data-dismiss="modal"
+							th:title="#{Layout.Close}" th:text="#{Layout.Close}">Chiudi</button>
+						<button type="button" id="btn_delete_si"
+							class="btn btn-primary towait" data-dismiss="modal"
+							th:title="#{generic.delete.button.label}"
+							th:text="#{generic.delete.button.label}">Elimina</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+
