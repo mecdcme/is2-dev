@@ -62,10 +62,10 @@ public class RelaisService {
 
 	final static String codeMatchingA = "X1";
 	final static String codeMatchingB = "X2";
-	final static String codContengencyTable = "CT";
-	final static String codContengencyIndexTable = "CIT";
-	final static String codMachingTable = "MT";
-	final static String codPossibleMachingTable = "PM";
+	final static String codContingencyTable = "CT";
+	final static String codContingencyIndexTable = "CIT";
+	final static String codMatchingTable = "MT";
+	final static String codPossibleMatchingTable = "PM";
 	final static String codResidualA = "RA";
 	final static String codResidualB = "RB";
 	final static String codQualityIndicators = "QI";
@@ -98,14 +98,14 @@ public class RelaisService {
 	@Autowired
 	private SparkService sparkService;
 
-	public Map<?, ?> probabilisticContencyTable(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
-			Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
+	public Map<?, ?> probabilisticContingencyTable(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
+												   Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
 
 		return callGenericMethod("pRLContingencyTable", idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
 
-	public Map<?, ?> deterministicRecorgeLinkage(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
-			Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
+	public Map<?, ?> deterministicRecordLinkage(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
+												Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
 
 		return callGenericMethod("dRL", idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
@@ -150,7 +150,7 @@ public class RelaisService {
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
 
-		final Map<String, ArrayList<String>> contengencyTableOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> contingencyTableOut = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
 
@@ -187,15 +187,15 @@ public class RelaisService {
 		List<String> nameMatchingVariables = new ArrayList<>();
 
 		contingencyService.getMetricMatchingVariableVector().forEach(metricsm -> {
-			contengencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
+			contingencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
 			nameMatchingVariables.add(metricsm.getMatchingVariable());
 		});
 
-		final Map<String, Integer> contengencyTable = Collections
+		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
 
 		final Map<String, StringBuilder> coupledIndexByPattern = RelaisUtility.getEmptyMapByKeyStringB(
-				contengencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
+				contingencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
 
 		final int CHUNK_SIZE = 8;
 
@@ -208,7 +208,7 @@ public class RelaisService {
 
 			// final ContingencyService contingencyServicelocal=new ContingencyService();
 			// contingencyServicelocal.init(parametriMap.get(params_MatchingVariables));
-			final Map<String, Integer> contengencyTableIA = contingencyService.getEmptyContingencyTable();
+			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
 
 			IntStream.rangeClosed(inf, sup).forEach(innerIA -> {
 
@@ -228,7 +228,7 @@ public class RelaisService {
 					Instant start1 = Instant.now();
 					String pattern = contingencyService.getPattern(valuesI);
 					System.out.println(Duration.between(start1, Instant.now()).toNanos() + " " + valuesI); // in millis
-					contengencyTableIA.put(pattern, contengencyTableIA.get(pattern) + 1);
+					contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
 					// if (Integer.parseInt(pattern) > 0){
 					// CharSequence phrase = (innerIA + 1) + ";" + (innerIB + 1);
 					// coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).append(phrase); //
@@ -240,9 +240,9 @@ public class RelaisService {
 				});
 			});
 
-			synchronized (contengencyTable) {
-				contengencyTableIA.entrySet().stream().forEach(e -> contengencyTable.put(e.getKey(),
-						contengencyTable.get(e.getKey()) + contengencyTableIA.get(e.getKey())));
+			synchronized (contingencyTable) {
+				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
+						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
 			}
 			/*
 			 * synchronized (coupledIndexByPattern) {
@@ -251,18 +251,18 @@ public class RelaisService {
 			 * getKey()))); }
 			 */
 		});
-		contengencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
 		// write to worksetout
-		contengencyTable.forEach((key, value) -> {
+		contingencyTable.forEach((key, value) -> {
 			int idx = 0;
 			for (String nameMatchingVariable : nameMatchingVariables) {
-				contengencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
+				contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
 			}
-			contengencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
+			contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
 		});
 
-		rolesOut.put(codContengencyTable, new ArrayList<>(contengencyTableOut.keySet()));
-		// rolesOut.put(codContengencyIndexTable, new
+		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
+		// rolesOut.put(codContingencyIndexTable, new
 		// ArrayList<>(coupledIndexByPattern.keySet()));
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 
@@ -271,8 +271,8 @@ public class RelaisService {
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codContengencyTable, contengencyTableOut);
-		// worksetOut.put(codContengencyIndexTable, coupledIndexByPattern);
+		worksetOut.put(codContingencyTable, contingencyTableOut);
+		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 
@@ -290,7 +290,7 @@ public class RelaisService {
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
 
-		final Map<String, ArrayList<String>> contengencyTableOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> contingencyTableOut = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
 
@@ -327,20 +327,20 @@ public class RelaisService {
 		List<String> nameMatchingVariables = new ArrayList<>();
 
 		contingencyService.getMetricMatchingVariableVector().forEach(metricsm -> {
-			contengencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
+			contingencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
 			nameMatchingVariables.add(metricsm.getMatchingVariable());
 		});
 
-		final Map<String, Integer> contengencyTable = Collections
+		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
 
 		final Map<String, StringBuilder> coupledIndexByPattern = RelaisUtility.getEmptyMapByKeyStringB(
-				contengencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
+				contingencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
 
 		IntStream.range(0, sizeA).parallel().forEach(innerIA -> {
 
 			final Map<String, String> valuesI = new HashMap<>();
-			final Map<String, Integer> contengencyTableIA = contingencyService.getEmptyContingencyTable();
+			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
 			final Map<String, StringBuilder> coupledIndexByPatternIA = RelaisUtility
 					.getEmptyMapByKeyStringB(coupledIndexByPattern.keySet().stream(), "");
 
@@ -354,7 +354,7 @@ public class RelaisService {
 				});
 
 				String pattern = contingencyService.getPattern(valuesI);
-				contengencyTableIA.put(pattern, contengencyTableIA.get(pattern) + 1);
+				contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
 				if (Integer.parseInt(pattern) > 0) {
 					CharSequence phrase = (innerIA + 1) + ";" + (innerIB + 1);
 					coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).append(phrase); // store
@@ -364,9 +364,9 @@ public class RelaisService {
 				}
 
 			});
-			synchronized (contengencyTable) {
-				contengencyTableIA.entrySet().stream().forEach(e -> contengencyTable.put(e.getKey(),
-						contengencyTable.get(e.getKey()) + contengencyTableIA.get(e.getKey())));
+			synchronized (contingencyTable) {
+				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
+						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
 			}
 			synchronized (coupledIndexByPattern) {
 				coupledIndexByPatternIA.entrySet().stream().forEach(
@@ -374,18 +374,18 @@ public class RelaisService {
 			}
 
 		});
-		contengencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
 		// write to worksetout
-		contengencyTable.forEach((key, value) -> {
+		contingencyTable.forEach((key, value) -> {
 			int idx = 0;
 			for (String nameMatchingVariable : nameMatchingVariables) {
-				contengencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
+				contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
 			}
-			contengencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
+			contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
 		});
 
-		rolesOut.put(codContengencyTable, new ArrayList<>(contengencyTableOut.keySet()));
-		// rolesOut.put(codContengencyIndexTable, new
+		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
+		// rolesOut.put(codContingencyIndexTable, new
 		// ArrayList<>(coupledIndexByPattern.keySet()));
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 
@@ -394,8 +394,8 @@ public class RelaisService {
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codContengencyTable, contengencyTableOut);
-		// worksetOut.put(codContengencyIndexTable, coupledIndexByPattern);
+		worksetOut.put(codContingencyTable, contingencyTableOut);
+		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 
@@ -411,7 +411,7 @@ public class RelaisService {
 
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
-		final Map<String, ArrayList<String>> contengencyTableOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> contingencyTableOut = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
 
@@ -439,7 +439,6 @@ public class RelaisService {
 				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesB));
 
 		logService.save("Blocking variables dataset A: " + blockingVariablesA);
-
 		logService.save("Blocking variables dataset B: " + blockingVariablesB);
 
 		ruoliVariabileNome.values().forEach((list) -> {
@@ -455,7 +454,7 @@ public class RelaisService {
 		List<String> nameMatchingVariables = new ArrayList<>();
 
 		contingencyService.getMetricMatchingVariableVector().forEach(metricsm -> {
-			contengencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
+			contingencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
 			nameMatchingVariables.add(metricsm.getMatchingVariable());
 		});
 
@@ -471,18 +470,18 @@ public class RelaisService {
 		logService.save("Size Blocking dataset A: " + indexesBlockingVariableA.size());
 		logService.save("Size Blocking dataset B: " + indexesBlockingVariableB.size());
 
-		final Map<String, Integer> contengencyTable = Collections
+		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
 
 		/*
 		 * final Map<String, List<String>> coupledIndexByPattern =
-		 * RelaisUtility.getEmptyMapByKey( contengencyTable.keySet().stream().filter(key
+		 * RelaisUtility.getEmptyMapByKey( contingencyTable.keySet().stream().filter(key
 		 * -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
 		 */
 		indexesBlockingVariableA.entrySet().parallelStream().forEach(entry -> {
 			String keyBlock = entry.getKey();
 
-			final Map<String, Integer> contengencyTableIA = contingencyService.getEmptyContingencyTable();
+			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
 
 			/*
 			 * final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility
@@ -505,7 +504,7 @@ public class RelaisService {
 						});
 
 						String pattern = contingencyService.getPattern(valuesI);
-						contengencyTableIA.put(pattern, contengencyTableIA.get(pattern) + 1);
+						contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
 						/*
 						 * if (Integer.parseInt(pattern) > 0) coupledIndexByPatternIA.get(PREFIX_PATTERN
 						 * + pattern) .add((innerIA + 1) + ";" + (innerIB + 1)); // store no zero based
@@ -514,9 +513,9 @@ public class RelaisService {
 
 			});
 
-			synchronized (contengencyTable) {
-				contengencyTableIA.entrySet().stream().forEach(e -> contengencyTable.put(e.getKey(),
-						contengencyTable.get(e.getKey()) + contengencyTableIA.get(e.getKey())));
+			synchronized (contingencyTable) {
+				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
+						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
 			}
 			/*
 			 * synchronized (coupledIndexByPattern) {
@@ -525,19 +524,19 @@ public class RelaisService {
 			 * getKey()))); }
 			 */
 		});
-		contengencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
 
 		// write to worksetout
-		contengencyTable.forEach((key, value) -> {
+		contingencyTable.forEach((key, value) -> {
 			int idx = 0;
 			for (String nameMatchingVariable : nameMatchingVariables) {
-				contengencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
+				contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
 			}
-			contengencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
+			contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
 		});
 
-		rolesOut.put(codContengencyTable, new ArrayList<>(contengencyTableOut.keySet()));
-		// rolesOut.put(codContengencyIndexTable, new
+		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
+		// rolesOut.put(codContingencyIndexTable, new
 		// ArrayList<>(coupledIndexByPattern.keySet()));
 
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
@@ -547,8 +546,8 @@ public class RelaisService {
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codContengencyTable, contengencyTableOut);
-		// worksetOut.put(codContengencyIndexTable, coupledIndexByPattern);
+		worksetOut.put(codContingencyTable, contingencyTableOut);
+		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		logService.save("Process Contingency Table Blocking End");
@@ -609,7 +608,7 @@ public class RelaisService {
 						float cprec = Float.parseFloat(worksetInn.get(codeFS).get(codePREC).get(indexItems));
 						float crec = Float.parseFloat(worksetInn.get(codeFS).get(codeREC).get(indexItems));
 
-						for (String ctVarname : ruoliVariabileNome.get(codContengencyTable)) {
+						for (String ctVarname : ruoliVariabileNome.get(codContingencyTable)) {
 							if (!ctVarname.equals(VARIABLE_FREQUENCY)) {
 								String p = worksetInn.get(codeFS).get(ctVarname).get(indexItems);
 								pattern.append(Double.valueOf(p).intValue());
@@ -683,8 +682,8 @@ public class RelaisService {
 		variableQuality.add(codePREC);
 		variableQuality.add(codeREC);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
-		rolesOut.put(codPossibleMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
+		rolesOut.put(codPossibleMatchingTable, variabileNomeListOut);
 		rolesOut.put(codResidualA, variabileNomeListMA);
 		rolesOut.put(codResidualB, variabileNomeListMB);
 		rolesOut.put(codQualityIndicators, variableQuality);
@@ -780,8 +779,8 @@ public class RelaisService {
 
 		worksetOut.put(codResidualB, residualBTable);
 		worksetOut.put(codResidualA, residualATable);
-		worksetOut.put(codPossibleMachingTable, possibleMatchingTable);
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		worksetOut.put(codQualityIndicators, qualityIndicators);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
@@ -833,7 +832,7 @@ public class RelaisService {
 						float crec = Float.parseFloat(worksetInn.get(codeFS).get(codeREC).get(indexItems));
 
 						String RValue = worksetInn.get(codeFS).get(codeRATIO).get(indexItems);
-						for (String ctVarname : ruoliVariabileNome.get(codContengencyTable)) {
+						for (String ctVarname : ruoliVariabileNome.get(codContingencyTable)) {
 							if (!ctVarname.equals(VARIABLE_FREQUENCY)) {
 								String p = worksetInn.get(codeFS).get(ctVarname).get(indexItems);
 								pattern.append(Double.valueOf(p).intValue());
@@ -895,8 +894,8 @@ public class RelaisService {
 		variableQuality.add(codePREC);
 		variableQuality.add(codeREC);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
-		rolesOut.put(codPossibleMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
+		rolesOut.put(codPossibleMatchingTable, variabileNomeListOut);
 		rolesOut.put(codResidualA, variabileNomeListMA);
 		rolesOut.put(codResidualB, variabileNomeListMB);
 		rolesOut.put(codQualityIndicators, variableQuality);
@@ -982,8 +981,8 @@ public class RelaisService {
 
 		worksetOut.put(codResidualB, residualBTable);
 		worksetOut.put(codResidualA, residualATable);
-		worksetOut.put(codPossibleMachingTable, possibleMatchingTable);
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		worksetOut.put(codQualityIndicators, qualityIndicators);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
@@ -1030,7 +1029,7 @@ public class RelaisService {
 						StringBuffer pattern = new StringBuffer();
 
 						String RValue = worksetInn.get(codeFS).get(codeRATIO).get(indexItems);
-						for (String ctVarname : ruoliVariabileNome.get(codContengencyTable)) {
+						for (String ctVarname : ruoliVariabileNome.get(codContingencyTable)) {
 							if (!ctVarname.equals(VARIABLE_FREQUENCY)) {
 								String p = worksetInn.get(codeFS).get(ctVarname).get(indexItems);
 								pattern.append(Double.valueOf(p).intValue());
@@ -1074,8 +1073,8 @@ public class RelaisService {
 		variabileNomeListOut.add(codeP_POST);
 		variabileNomeListOut.add(codeRATIO);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
-		rolesOut.put(codPossibleMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
+		rolesOut.put(codPossibleMatchingTable, variabileNomeListOut);
 		rolesOut.put(codResidualA, variabileNomeListMA);
 		rolesOut.put(codResidualB, variabileNomeListMB);
 
@@ -1098,8 +1097,8 @@ public class RelaisService {
 
 		worksetOut.put(codResidualB, residualBTable);
 		worksetOut.put(codResidualA, residualATable);
-		worksetOut.put(codPossibleMachingTable, possibleMatchingTable);
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 	}
@@ -1142,7 +1141,7 @@ public class RelaisService {
 						StringBuffer pattern = new StringBuffer();
 
 						String RValue = worksetInn.get(codeFS).get(codeRATIO).get(indexItems);
-						for (String ctVarname : ruoliVariabileNome.get(codContengencyTable)) {
+						for (String ctVarname : ruoliVariabileNome.get(codContingencyTable)) {
 							if (!ctVarname.equals(VARIABLE_FREQUENCY)) {
 								String p = worksetInn.get(codeFS).get(ctVarname).get(indexItems);
 								pattern.append(Double.valueOf(p).intValue());
@@ -1186,8 +1185,8 @@ public class RelaisService {
 		variabileNomeListOut.add(codeP_POST);
 		variabileNomeListOut.add(codeRATIO);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
-		rolesOut.put(codPossibleMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
+		rolesOut.put(codPossibleMatchingTable, variabileNomeListOut);
 		rolesOut.put(codResidualA, variabileNomeListMA);
 		rolesOut.put(codResidualB, variabileNomeListMB);
 
@@ -1210,8 +1209,8 @@ public class RelaisService {
 
 		worksetOut.put(codResidualB, residualBTable);
 		worksetOut.put(codResidualA, residualATable);
-		worksetOut.put(codPossibleMachingTable, possibleMatchingTable);
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 	}
@@ -1234,7 +1233,7 @@ public class RelaisService {
 
 		patternList.forEach(pattern -> {
 
-			int sizeList = worksetInn.get(codContengencyTable).get(pattern).size();
+			int sizeList = worksetInn.get(codContingencyTable).get(pattern).size();
 			int partitionSize = (sizeList / CHUNK_SIZE) + ((sizeList % CHUNK_SIZE) == 0 ? 0 : 1);
 
 			IntStream.range(0, partitionSize).parallel().forEach(chunkIndex -> {
@@ -1249,7 +1248,7 @@ public class RelaisService {
 
 				IntStream.rangeClosed(inf, sup).forEach(innerIndex -> {
 
-					String[] indexesArr = worksetInn.get(codContengencyTable).get(pattern).get(innerIndex)
+					String[] indexesArr = worksetInn.get(codContingencyTable).get(pattern).get(innerIndex)
 							.split(INDEX_SEPARATOR);
 					int innerIA = Integer.parseInt(indexesArr[0]);
 					int innerIB = Integer.parseInt(indexesArr[1]);
@@ -1306,7 +1305,7 @@ public class RelaisService {
 
 		patternList.forEach(pattern -> {
 
-			int sizeList = worksetInn.get(codContengencyIndexTable).get(PREFIX_PATTERN + pattern).size();
+			int sizeList = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern).size();
 			int partitionSize = (sizeList / CHUNK_SIZE) + ((sizeList % CHUNK_SIZE) == 0 ? 0 : 1);
 
 			IntStream.range(0, partitionSize).parallel().forEach(chunkIndex -> {
@@ -1321,7 +1320,7 @@ public class RelaisService {
 
 				IntStream.rangeClosed(inf, sup).forEach(innerIndex -> {
 
-					String[] indexesArr = worksetInn.get(codContengencyIndexTable).get(PREFIX_PATTERN + pattern)
+					String[] indexesArr = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern)
 							.get(innerIndex).split(INDEX_SEPARATOR);
 					int innerIA = Integer.parseInt(indexesArr[0]);
 					int innerIB = Integer.parseInt(indexesArr[1]);
@@ -1389,7 +1388,7 @@ public class RelaisService {
 		variabileNomeListOut.addAll(variabileNomeListMA);
 		variabileNomeListOut.addAll(variabileNomeListMB);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
 
 		String firstFiledMA = ruoliVariabileNome.get(codeMatchingA).get(0);
 		String firstFiledMB = ruoliVariabileNome.get(codeMatchingB).get(0);
@@ -1443,7 +1442,7 @@ public class RelaisService {
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 
@@ -1497,7 +1496,7 @@ public class RelaisService {
 		variabileNomeListOut.addAll(variabileNomeListMA);
 		variabileNomeListOut.addAll(variabileNomeListMB);
 
-		rolesOut.put(codMachingTable, variabileNomeListOut);
+		rolesOut.put(codMatchingTable, variabileNomeListOut);
 
 		contingencyService.init(parametriMap.get(params_MatchingVariables));
 		variabileNomeListOut.forEach(varname -> {
@@ -1562,7 +1561,7 @@ public class RelaisService {
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codMachingTable, matchingTable);
+		worksetOut.put(codMatchingTable, matchingTable);
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 	}

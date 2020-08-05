@@ -73,12 +73,12 @@ public class ContingencyService implements Serializable {
             String matchingVariableA = metricMatchingVariable.getString("MatchingVariableA");
             String matchingVariableB = metricMatchingVariable.getString("MatchingVariableB");
             String method = metricMatchingVariable.getString("Method");
-            Float thresould = metricMatchingVariable.isNull("Threshold") ? null
+            Float threshold = metricMatchingVariable.isNull("Threshold") ? null
                     : Float.parseFloat(metricMatchingVariable.get("Threshold").toString());
             Integer windowSize = metricMatchingVariable.isNull("WindowSize") ? null
                     : Integer.parseInt(metricMatchingVariable.get("WindowSize").toString());
             MetricMatchingVariable mm = new MetricMatchingVariable(matchingVariable, matchingVariableA,
-                    matchingVariableB, method, thresould, windowSize);
+                    matchingVariableB, method, threshold, windowSize);
             metricMatchingVariableVector.add(mm);
 
         }
