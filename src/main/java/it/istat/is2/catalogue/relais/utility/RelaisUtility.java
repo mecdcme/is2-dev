@@ -17,17 +17,17 @@ public class RelaisUtility {
 
 	private static final String KEY_SEPARATOR = "@_@";
 
-	public static Map<String, List<String>> getEmptyMapByKey(Stream<String> keys,String prefixKey) {
+	public static Map<String, List<String>> getEmptyMapByKey(Stream<String> keys, String prefixKey) {
 
 		final Map<String, List<String>> valuesMap = new LinkedHashMap<String, List<String>>();
-		keys.forEach(key -> valuesMap.put(prefixKey+key, new ArrayList<>()));
+		keys.forEach(key -> valuesMap.put(prefixKey + key, new ArrayList<>()));
 		return valuesMap;
 	}
 
-	public static Map<String, StringBuilder> getEmptyMapByKeyStringB(Stream<String> keys,String prefixKey) {
+	public static Map<String, StringBuilder> getEmptyMapByKeyStringB(Stream<String> keys, String prefixKey) {
 
-		final Map<String, StringBuilder> valuesMap = new LinkedHashMap<String,StringBuilder>();
-		keys.forEach(key -> valuesMap.put(prefixKey+key, new StringBuilder()));
+		final Map<String, StringBuilder> valuesMap = new LinkedHashMap<String, StringBuilder>();
+		keys.forEach(key -> valuesMap.put(prefixKey + key, new StringBuilder()));
 		return valuesMap;
 	}
 
