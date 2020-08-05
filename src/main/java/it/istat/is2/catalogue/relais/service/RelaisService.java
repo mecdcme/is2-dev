@@ -225,9 +225,9 @@ public class RelaisService {
 						valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(innerIB));
 					});
 
-					Instant start1 = Instant.now();
+				//	Instant start1 = Instant.now();
 					String pattern = contingencyService.getPattern(valuesI);
-					System.out.println(Duration.between(start1, Instant.now()).toNanos() + " " + valuesI); // in millis
+				///	System.out.println(Duration.between(start1, Instant.now()).toNanos() + " " + valuesI); // in millis
 					contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
 					// if (Integer.parseInt(pattern) > 0){
 					// CharSequence phrase = (innerIA + 1) + ";" + (innerIB + 1);

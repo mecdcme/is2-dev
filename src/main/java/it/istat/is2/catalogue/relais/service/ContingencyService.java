@@ -33,16 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
-import it.istat.is2.catalogue.relais.metrics.DiceSimilarity;
 import it.istat.is2.catalogue.relais.metrics.Jaro;
-import it.istat.is2.catalogue.relais.metrics.JaroWinkler;
-import it.istat.is2.catalogue.relais.metrics.Levenshtein;
-import it.istat.is2.catalogue.relais.metrics.QGramsDistance;
-import it.istat.is2.catalogue.relais.metrics.Soundex;
-import it.istat.is2.catalogue.relais.metrics.added.NumericComparison;
-import it.istat.is2.catalogue.relais.metrics.added.NumericEuclideanDistance;
-import it.istat.is2.catalogue.relais.metrics.added.QGramsInclusion;
-import it.istat.is2.catalogue.relais.metrics.added.WindowEquality;
 import it.istat.is2.catalogue.relais.metrics.dataStructure.MetricMatchingVariable;
 import it.istat.is2.catalogue.relais.metrics.dataStructure.MetricMatchingVariableVector;
 import it.istat.is2.catalogue.relais.metrics.utility.AbstractStringMetric;
@@ -90,24 +81,8 @@ public class ContingencyService implements Serializable {
                 metrics[ind] = null;
             else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Jaro"))
                 metrics[ind] = new Jaro();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Dice"))
-                metrics[ind] = new DiceSimilarity();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("JaroWinkler"))
-                metrics[ind] = new JaroWinkler();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Levenshtein"))
-                metrics[ind] = new Levenshtein();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("3Grams"))
-                metrics[ind] = new QGramsDistance();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Soundex"))
-                metrics[ind] = new Soundex();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("NumericComparison"))
-                metrics[ind] = new NumericComparison();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("NumericEuclideanDistance"))
-                metrics[ind] = new NumericEuclideanDistance();
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("WindowEquality"))
-                metrics[ind] = new WindowEquality(metricMatchingVariableVector.get(ind));
-            else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Inclusion3Grams"))
-                metrics[ind] = new QGramsInclusion();
+           
+         
         }
 
     }
@@ -140,7 +115,7 @@ public class ContingencyService implements Serializable {
                     .get(metricMatchingVariable.getMatchingVariableNameVariableB()));
 
             if (matchingVariableA == null || matchingVariableB == null
-                    || matchingVariableA.equals("")) {
+                    || matchingVariableA.length()==0) {
 
                 pattern.append("0");
             }
@@ -152,8 +127,8 @@ public class ContingencyService implements Serializable {
                     pattern.append("0");
             } else {
 
-                if (metrics[ii].getSimilarity(matchingVariableA.toString(),
-                        matchingVariableB.toString()) >= metricMatchingVariable.getMetricThreshold().floatValue())
+                if (metrics[ii].getSimilarity(matchingVariableA,
+                        matchingVariableB) >= metricMatchingVariable.getMetricThreshold().floatValue())
                     pattern.append("1");
                 else
                     pattern.append("0");
@@ -198,7 +173,7 @@ public class ContingencyService implements Serializable {
                     .get(metricMatchingVariable.getMatchingVariableNameVariableB()));
 
             if (matchingVariableA == null || matchingVariableB == null
-                    || matchingVariableA.equals("")) {
+                    || matchingVariableA.length()==0) {
                 return false;
             }
             // Equality
@@ -206,8 +181,8 @@ public class ContingencyService implements Serializable {
                 if (!matchingVariableA.equals(matchingVariableB))
                     return false;
             } else {
-                if (metrics[ii].getSimilarity(matchingVariableA.toString(),
-                        matchingVariableB.toString()) < metricMatchingVariable.getMetricThreshold().floatValue())
+                if (metrics[ii].getSimilarity(matchingVariableA,
+                        matchingVariableB) < metricMatchingVariable.getMetricThreshold().floatValue())
                     return false;
             }
         }
