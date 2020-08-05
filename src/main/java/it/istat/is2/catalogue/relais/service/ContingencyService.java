@@ -55,9 +55,6 @@ import lombok.Data;
 @Data
 @Component
 public class ContingencyService implements Serializable {
-    /**
-     *
-     */
     private static final long serialVersionUID = -4825885817709343718L;
     private final int DIMMAX = 100000;
     private String blockingKey;
@@ -126,43 +123,48 @@ public class ContingencyService implements Serializable {
 
     public String getPattern(Map<String, String> valuesI) {
 
-        String pattern = "";
+        StringBuilder pattern = new StringBuilder();
 
-        /* evaluation of patternd */
+        /* evaluation of pattern */
 
         for (int ii = 0; ii < numVar; ii++) {
+
+            StringBuilder matchingVariableA = new StringBuilder();
+            StringBuilder matchingVariableB = new StringBuilder();
+
             MetricMatchingVariable metricMatchingVariable = metricMatchingVariableVector.get(ii);
-            String matchingVariableNameVariableA = valuesI
-                    .get(metricMatchingVariable.getMatchingVariableNameVariableA());
-            String matchingVariableNameVariableB = valuesI
-                    .get(metricMatchingVariable.getMatchingVariableNameVariableB());
 
-            if (matchingVariableNameVariableA == null || matchingVariableNameVariableB == null
-                    || matchingVariableNameVariableA.equals("")) {
+            matchingVariableA.append(valuesI
+                    .get(metricMatchingVariable.getMatchingVariableNameVariableA()));
+            matchingVariableB.append(valuesI
+                    .get(metricMatchingVariable.getMatchingVariableNameVariableB()));
 
-                pattern = pattern + "0";
+            if (matchingVariableA == null || matchingVariableB == null
+                    || matchingVariableA.equals("")) {
+
+                pattern.append("0");
             }
             // Equality
             else if (metrics[ii] == null) {
-                if (matchingVariableNameVariableA.equals(matchingVariableNameVariableB))
-                    pattern = pattern + "1";
+                if (matchingVariableA.equals(matchingVariableB))
+                    pattern.append("1");
                 else
-                    pattern = pattern + "0";
+                    pattern.append("0");
             } else {
 
-                if (metrics[ii].getSimilarity(matchingVariableNameVariableA,
-                        matchingVariableNameVariableB) >= metricMatchingVariable.getMetricThreshold().floatValue())
-                    pattern = pattern + "1";
+                if (metrics[ii].getSimilarity(matchingVariableA.toString(),
+                        matchingVariableB.toString()) >= metricMatchingVariable.getMetricThreshold().floatValue())
+                    pattern.append("1");
                 else
-                    pattern = pattern + "0";
+                    pattern.append("0");
             }
         }
-        return pattern;
+        return pattern.toString();
     }
 
-    public Map<String, Integer> getEmptyContengencyTable() {
+    public Map<String, Integer> getEmptyContingencyTable() {
 
-        Map<String, Integer> contengencyTable = new LinkedHashMap<String, Integer>();
+        Map<String, Integer> contingencyTable = new LinkedHashMap<String, Integer>();
         int mask1 = (int) Math.pow(2, numVar);
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < mask1; i++) {
@@ -177,37 +179,35 @@ public class ContingencyService implements Serializable {
                 }
                 mask = mask >> 1;
             }
-
-            contengencyTable.put(sb.substring(1), 0);
-
+            contingencyTable.put(sb.substring(1), 0);
         }
-
-        return contengencyTable;
+        return contingencyTable;
     }
 
     public boolean isExactMatching(Map<String, String> valuesI) {
 
         for (int ii = 0; ii < numVar; ii++) {
+
+            StringBuilder matchingVariableA = new StringBuilder();
+            StringBuilder matchingVariableB = new StringBuilder();
+
             MetricMatchingVariable metricMatchingVariable = metricMatchingVariableVector.get(ii);
-            String matchingVariableNameVariableA = valuesI
-                    .get(metricMatchingVariable.getMatchingVariableNameVariableA());
-            String matchingVariableNameVariableB = valuesI
-                    .get(metricMatchingVariable.getMatchingVariableNameVariableB());
+            matchingVariableA.append(valuesI
+                    .get(metricMatchingVariable.getMatchingVariableNameVariableA()));
+            matchingVariableB.append(valuesI
+                    .get(metricMatchingVariable.getMatchingVariableNameVariableB()));
 
-            if (matchingVariableNameVariableA == null || matchingVariableNameVariableB == null
-                    || matchingVariableNameVariableA.equals("")) {
-
+            if (matchingVariableA == null || matchingVariableB == null
+                    || matchingVariableA.equals("")) {
                 return false;
             }
             // Equality
             else if (metrics[ii] == null) {
-                if (!matchingVariableNameVariableA.equals(matchingVariableNameVariableB))
+                if (!matchingVariableA.equals(matchingVariableB))
                     return false;
             } else {
-
-                if (metrics[ii].getSimilarity(matchingVariableNameVariableA,
-                        matchingVariableNameVariableB) < metricMatchingVariable.getMetricThreshold().floatValue())
-
+                if (metrics[ii].getSimilarity(matchingVariableA.toString(),
+                        matchingVariableB.toString()) < metricMatchingVariable.getMetricThreshold().floatValue())
                     return false;
             }
         }
