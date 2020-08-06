@@ -1,6 +1,7 @@
 package it.istat.is2.catalogue.relais.metrics;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import it.istat.is2.catalogue.relais.metrics.utility.*;
 
@@ -32,9 +33,10 @@ public final class Jaro extends AbstractStringMetric implements Serializable {
 
     public float getSimilarity(final StringBuilder string1b, final StringBuilder string2b) {
 
-    	char[] string1 = new char[string1b.length()];
+    
+    	final char[] string1 = new char[string1b.length()];
     	string1b.getChars(0, string1b.length(), string1, 0);
-    	char[] string2 = new char[string2b.length()];
+    	final char[] string2 = new char[string2b.length()];
     	string2b.getChars(0, string2b.length(), string2, 0);
     	
         final int halflen = ((Math.min(string1.length, string2.length)) / 2) + ((Math.min(string1.length, string2.length)) % 2);
@@ -68,7 +70,8 @@ public final class Jaro extends AbstractStringMetric implements Serializable {
 
     private static char[] getCommonCharacters(final char[] string1, final char[] string2, final int distanceSep) {
         final StringBuilder returnCommons = new StringBuilder();
-        final char[] copy = string2;
+        final char[] copy =  Arrays.copyOf(string2, string2.length);
+        
         for (int i = 0; i < string1.length; i++) {
             final char ch = string1[i];
             boolean foundIt = false;
