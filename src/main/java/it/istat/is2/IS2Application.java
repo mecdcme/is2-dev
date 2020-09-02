@@ -35,6 +35,8 @@ import org.springframework.context.annotation.PropertySource;
 public class IS2Application extends SpringBootServletInitializer {
 
     public static void main(String[] args) {
+    	int cores = Runtime.getRuntime().availableProcessors();
+    	System.out.println("cores: "+cores);
         SpringApplication.run(IS2Application.class, args);
     }
 

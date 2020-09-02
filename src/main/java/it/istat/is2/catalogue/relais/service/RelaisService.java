@@ -196,12 +196,14 @@ public class RelaisService {
 
 		final Map<String, StringBuilder> coupledIndexByPattern = RelaisUtility.getEmptyMapByKeyStringB(
 				contingencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
-
+		//System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "20");
+	 
+	 		
 		final int CHUNK_SIZE = 8;
 
 		int partitionSize = (sizeA / CHUNK_SIZE) + ((sizeA % CHUNK_SIZE) == 0 ? 0 : 1);
 
-		IntStream.range(0, partitionSize).parallel().forEach(chunkIndex -> {
+		IntStream.range(0, partitionSize).forEach(chunkIndex -> {
 
 			int inf = (chunkIndex * CHUNK_SIZE);
 			int sup = (chunkIndex == partitionSize - 1) ? sizeA - 1 : (inf + CHUNK_SIZE - 1);
@@ -276,7 +278,7 @@ public class RelaisService {
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 
-		System.out.println("PC time:" + Duration.between(start, Instant.now()).toSeconds());
+		System.out.println("PC time:"+CHUNK_SIZE+" "+ System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism") +" "+ Duration.between(start, Instant.now()).toSeconds());
 
 		return returnOut;
 	}
