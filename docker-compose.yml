@@ -17,8 +17,12 @@ services:
     image: mecdcme/is2-postgres:latest
     environment:
       - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgresData:/var/lib/postgresql/data
   adminer:
     image: adminer
     restart: always
     ports:
       - 8081:8080
+volumes:
+    postgresData:
