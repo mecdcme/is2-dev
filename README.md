@@ -13,7 +13,7 @@ In order to build the IS2 application, your environment should fulfill the follo
 * JDK 11 or later; 
 * Maven 3.0+;
 * Mysql Server 8.0 or later;
-
+ 
 ## What you’ll build
 Istat has realized a generalized environment (Istat Statistical Service - IS2) that allows to select statistical services from a catalogue and execute them through a web application (IS2 workbench).
 The IS2 Workbench has been designed to offer a set of functionalities that allow to:
