@@ -42,6 +42,9 @@ INSERT INTO is2.is2_app_role (ID, CODE, NAME, DESCR, ORDER_CODE,CLS_DATA_TYPE_ID
 
 -- INSERT INTO is2.is2_app_role (ID, CODE, NAME, DESCR, ORDER_CODE,CLS_DATA_TYPE_ID, PARAMETER_ID)  VALUES (21, 'CIT','INDEXES MATCHED', 'INDEX ROWS MATCHED CONTENGENCY TABLE', 21, 1,21 );
 INSERT INTO is2.is2_app_role (ID, CODE, NAME, DESCR, ORDER_CODE,CLS_DATA_TYPE_ID, PARAMETER_ID)  VALUES (22, 'MTR', 'MATCHING TABLE REDUCED', 'MATCHING TABLE WITH CONSTRAINT', 22, 1, NULL);
+INSERT INTO is2.is2_app_role (ID, CODE, NAME, DESCR, ORDER_CODE,CLS_DATA_TYPE_ID, PARAMETER_ID)  VALUES (23, 'QI', 'QUALITY INDICATORS', 'QUALITY INDICATORS OF RESULTS', 14, 1, NULL);
+INSERT INTO is2.is2_app_role (ID, CODE, NAME, DESCR, ORDER_CODE,CLS_DATA_TYPE_ID, PARAMETER_ID)  VALUES (24, 'PMR', 'POSSIBLE MATCHING TABLE REDUCED', 'POSSIBLE MATCHING TABLE WITH CONSTRAINT', 22, 1, NULL);
+
 
 --
 -- TOC entry 4907 (class 0 OID 25150)
@@ -118,6 +121,8 @@ INSERT INTO is2.is2_link_business_service_app_role VALUES (200, 20);
 -- INSERT INTO is2.is2_link_business_service_app_role VALUES (200, 21);
 
 INSERT INTO is2.is2_link_business_service_app_role VALUES (200, 22);
+INSERT INTO is2.is2_link_business_service_app_role VALUES (200, 23);
+INSERT INTO is2.is2_link_business_service_app_role VALUES (200, 24);
 
 --
 -- TOC entry 4932 (class 0 OID 25240)
@@ -183,7 +188,7 @@ INSERT INTO is2.is2_link_process_step VALUES (76, 76);
 INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id) VALUES (11, 'probabilisticContingencyTable', 'This function calculates the contingency Table', 'ContingencyTable', 250);
 INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (12, 'fellegisunter', 'This function implements the Fellegi Sunter algorithm', 'FellegiSunter', 200);
 INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (13, 'probabilisticResultTables', 'This function calculates the Matching Table', 'MatchingTable', 250);
-INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (14, 'lpreduction', 'This function implements tha constrint on matches', 'MatchingTableReduced', 200);
+INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (14, 'reducedResultTablesGreedy',  'This function implements tha constraint on matches', 'MatchingTableReduced', 250);
 
 -- INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (15, 'contingencyTableBlocking', 'This function calculates the contingency Table with Blocking variable', 'ContingencyTableBlocking', 250);
 -- INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (16, 'resultTablesBlocking', 'This function calculates the Matching Table with Blocking variable', 'MatchingTableBlocking', 250);
@@ -234,6 +239,8 @@ INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_ins
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (173, 0, 7, 13, 2);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (176, 1, 8, 13, 1);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (177, 1, 9, 13, 1);
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (178, 0, 23, 13, 2);
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (179, 0, 10, 13, 2);
 
 -- INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (180, 1, 1, 15, 1);
 -- INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (181, 1, 2, 15, 1);
@@ -260,6 +267,8 @@ INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_ins
 
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (195, 1, 7, 14, 1);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (197, 0, 22, 14, 2);
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (205, 1, 10, 14, 1);
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (207, 0, 24, 14, 2);
 
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (200, 1, 1, 20, 1);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (201, 1, 2, 20, 1);

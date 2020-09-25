@@ -76,6 +76,9 @@ public class RelaisService {
 	final static String codePREC = "PRECISION";
 	final static String codeREC = "RECALL";
 	final static String codeTHR = "THRESHOLD";
+	final static String codMatchingTableReduced = "MTR";
+	final static String codPossibleMatchingTableReduced = "PMR";
+	
 	final static String params_MatchingVariables = "MATCHING_VARIABLES";
 	final static String params_ThresholdMatching = "THRESHOLD_MATCHING";
 	final static String params_ThresholdUnMatching = "THRESHOLD_UNMATCHING";
@@ -794,6 +797,7 @@ public class RelaisService {
 			final Map<String, Map<String, List<String>>> worksetInn, final Map<String, String> parametriMap)
 			throws Exception {
 
+		System.out.println("in pRLResultTablesCartesianProduct");
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> matchingTable = Collections.synchronizedMap(new LinkedHashMap<>());
@@ -974,20 +978,22 @@ public class RelaisService {
 		qualityIndicators.put(codeTHR, new ArrayList<>(List.of(paramTM, paramTU)));
 		qualityIndicators.put(codePREC, new ArrayList<>(List.of(String.valueOf(mprec), String.valueOf(pprec))));
 		qualityIndicators.put(codeREC, new ArrayList<>(List.of(String.valueOf(mrec), String.valueOf(prec))));
-
+		
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 		rolesOut.keySet().forEach(code -> {
 			rolesGroupOut.put(code, code);
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		worksetOut.put(codResidualB, residualBTable);
-		worksetOut.put(codResidualA, residualATable);
+		//worksetOut.put(codResidualB, residualBTable);
+		//worksetOut.put(codResidualA, residualATable);
 		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
 		worksetOut.put(codMatchingTable, matchingTable);
 		worksetOut.put(codQualityIndicators, qualityIndicators);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
+		System.out.println("end pRLResultTablesCartesianProduct");
+		
 		return returnOut;
 	}
 
@@ -1577,6 +1583,279 @@ public class RelaisService {
 			throw new Exception("Incorrect Threshold value!");
 		}
 
+	}
+	
+	public Map<?, ?> reducedResultTablesGreedy(Long idelaborazione,
+			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetInn,
+			Map<String, String> parametriMap) throws Exception {
+
+		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
+		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
+		final Map<String, String> rolesGroupOut = new HashMap<>();
+
+		logService.save("Process greedy reduction result tables  Starting...");
+
+		ArrayList<String> variabileNomeListMA = new ArrayList<>();
+		ArrayList<String> variabileNomeListMB = new ArrayList<>();
+		ArrayList<String> variabileNomeListOut = new ArrayList<>();
+
+		variabileNomeListMA.add(ROW_IA);
+		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
+			variabileNomeListMA.add(varname);
+		});
+		variabileNomeListMB.add(ROW_IB);
+		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
+			variabileNomeListMB.add(varname);
+		});
+
+		logService.save("Matching variables dataset A: " + variabileNomeListMA);
+		logService.save("Matching variables dataset B: " + variabileNomeListMB);
+
+		variabileNomeListOut.addAll(variabileNomeListMA);
+		variabileNomeListOut.addAll(variabileNomeListMB);
+		variabileNomeListOut.add(codeP_POST);
+		variabileNomeListOut.add(codeRATIO);
+
+		rolesOut.put(codMatchingTableReduced, variabileNomeListOut);
+		rolesOut.put(codPossibleMatchingTableReduced, variabileNomeListOut);
+		
+		// start elab
+		
+		final Map<String, ArrayList<String>> matchingTableReduced = Collections.synchronizedMap(new LinkedHashMap<>());
+		final Map<String, ArrayList<String>> possibleTableReduced = Collections.synchronizedMap(new LinkedHashMap<>());
+
+		variabileNomeListOut.forEach(varname -> {
+			matchingTableReduced.put(varname, new ArrayList<>());
+			possibleTableReduced.put(varname, new ArrayList<>());
+		});
+
+		Map<String,String> KeyA= new HashMap<>();
+		Map<String,String> KeyB= new HashMap<String,String>();
+		
+		Map<String, List<String>> matches = worksetInn.get(codMatchingTable);
+		//manca sorting
+		int size = matches.get(ROW_IA).size();
+
+		/* IntStream.rangeClosed(0, size).forEach(innerIndex -> */
+		for (int innerIndex = 0; innerIndex < size; innerIndex++){
+			
+			    if ((! KeyA.containsKey(matches.get(ROW_IA).get(innerIndex))) && 
+			    	(! KeyB.containsKey(matches.get(ROW_IB).get(innerIndex)))) {
+		
+			    	/*variabileNomeListOut.forEach(varname ->*/
+			    	for (String varname:variabileNomeListOut) {
+			    		matchingTableReduced.get(varname).add(matches.get(varname).get(innerIndex));
+				    }
+			    	
+			    	KeyA.put(matches.get(ROW_IA).get(innerIndex),matches.get(ROW_IB).get(innerIndex));
+			    	KeyB.put(matches.get(ROW_IB).get(innerIndex),matches.get(ROW_IA).get(innerIndex));
+			    }
+
+		}
+		
+		Map<String, List<String>> pmatches = worksetInn.get(codPossibleMatchingTable);
+		//manca sorting
+
+		size = pmatches.get(ROW_IA).size();
+		/*IntStream.rangeClosed(0, size).forEach(innerIndex ->*/ 
+		for (int innerIndex=0; innerIndex<size; innerIndex++) {
+			
+			    if ((! KeyA.containsKey(pmatches.get(ROW_IA).get(innerIndex))) && 
+			    	(! KeyB.containsKey(pmatches.get(ROW_IB).get(innerIndex)))) {
+		
+			    	/*variabileNomeListOut.forEach(varname ->*/ 
+			    	for (String varname : variabileNomeListOut) {
+			    		possibleTableReduced.get(varname).add(pmatches.get(varname).get(innerIndex));
+				    }
+			    	
+			    	KeyA.put(pmatches.get(ROW_IA).get(innerIndex),pmatches.get(ROW_IB).get(innerIndex));
+			    	KeyB.put(pmatches.get(ROW_IB).get(innerIndex),pmatches.get(ROW_IA).get(innerIndex));
+			    }
+
+		}
+
+		
+		//end elab
+
+		returnOut.put(EngineService.ROLES_OUT, rolesOut);
+		rolesOut.keySet().forEach(code -> {
+			rolesGroupOut.put(code, code);
+		});
+		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
+
+		worksetOut.put(codPossibleMatchingTableReduced, possibleTableReduced);
+		worksetOut.put(codMatchingTableReduced, matchingTableReduced);
+		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
+		return returnOut;
+	}
+
+
+public class SNelem implements Comparable<SNelem> {
+		
+		public int dataset;
+		public int nrow;
+		public String sortingKey;
+		
+		public SNelem(int dataset, int nrow, String sortingKey) {
+			this.dataset=dataset;
+			this.nrow=nrow;
+			this.sortingKey=sortingKey;
+		}
+		
+		public int compareTo(SNelem o) {            
+            return this.sortingKey.compareTo(o.sortingKey);
+        }
+	}
+	
+	//pRLContingencyTableSortedNeighborhood
+	public Map<?, ?> newpRLContingencyTableBlockingVariables(Long idelaborazione,
+			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
+			Map<String, String> parametriMap) throws Exception {
+
+		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
+		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
+		final Map<String, ArrayList<String>> contingencyTableOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
+		final Map<String, String> rolesGroupOut = new HashMap<>();
+
+		// <codRuolo,[namevar1,namevar2..]
+
+		final ArrayList<String> variabileNomeListMA = new ArrayList<>();
+		final ArrayList<String> variabileNomeListMB = new ArrayList<>();
+		final List<String> sortingVariablesA = new ArrayList<>();
+		final List<String> sortingVariablesB = new ArrayList<>();
+		final int window;
+
+		final ArrayList<String> variabileNomeListOut = new ArrayList<>();
+		//logService.save("Process Contingency Table Sorted Neighborhood Starting...");
+		/*ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
+			variabileNomeListMA.add(varname);
+		});
+		logService.save("Matching variables dataset A: " + variabileNomeListMA);
+		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
+			variabileNomeListMB.add(varname);
+		});
+		logService.save("Matching variables dataset B: " + variabileNomeListMB);
+
+		sortingVariablesA.addAll(
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesA));
+		sortingVariablesB.addAll(
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesB));
+        window=100;
+        
+		logService.save("Sorting variables dataset A: " + sortingVariablesA);
+		logService.save("Sorting variables dataset B: " + sortingVariablesB);
+		logService.save("Window size: " + window);
+
+		ruoliVariabileNome.values().forEach((list) -> {
+			variabileNomeListOut.addAll(list);
+		});
+
+		try {
+			contingencyService.init(parametriMap.get(params_MatchingVariables));
+		} catch (Exception e) {
+			logService.save("Error parsing " + params_MatchingVariables);
+			throw new Exception("Error parsing " + params_MatchingVariables);
+		}
+		List<String> nameMatchingVariables = new ArrayList<>();
+
+		contingencyService.getMetricMatchingVariableVector().forEach(metricsm -> {
+			contingencyTableOut.put(metricsm.getMatchingVariable(), new ArrayList<>());
+			nameMatchingVariables.add(metricsm.getMatchingVariable());
+		});
+
+		if (Utility.isNullOrEmpty(sortingVariablesA) || Utility.isNullOrEmpty(sortingVariablesB)) {
+			logService.save("Error parsing SORTING VARAIABLES");
+			throw new Exception("Error parsing SORTING VARAIABLES");
+		}
+
+		
+
+		final Map<String, Integer> contingencyTable = Collections
+				.synchronizedMap(contingencyService.getEmptyContingencyTable());
+
+		int dimA =worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).size();
+		int dimB =worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).size();
+		int count=0;
+		
+		ArrayList<SNelem> sortlist = new ArrayList<SNelem>();
+		for (int index=0; index < dimA;index++ ) {
+			sortlist.add(new SNelem(0, index, worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).get(index)));
+		}
+		for (int index=0; index < dimB;index++ ) {
+			sortlist.add(new SNelem(0, index, worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).get(index)));
+		}
+		Collections.sort(sortlist);
+		for (int index=0; index < (dimA+dimB);index++ ) {
+			for (int index2=1;index2<=window && (index2+index)<(dimA+dimB);index2++) {
+				if (sortlist.get(index2).dataset>sortlist.get(index).dataset) count++;
+				if (sortlist.get(index2).dataset<sortlist.get(index).dataset) count++;
+			}
+		}
+		*/
+		
+		/*indexesBlockingVariableA.entrySet().parallelStream().forEach(entry -> {
+			String keyBlock = entry.getKey();
+
+			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
+
+
+			// Dataset A
+			entry.getValue().forEach(innerIA -> {
+
+				final Map<String, String> valuesI = new HashMap<>();
+
+				variabileNomeListMA.forEach(varnameMA -> {
+					valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(innerIA));
+				});
+				if (indexesBlockingVariableB.get(keyBlock) != null)
+					indexesBlockingVariableB.get(keyBlock).forEach(innerIB -> {
+
+						variabileNomeListMB.forEach(varnameMB -> {
+							valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(innerIB));
+						});
+
+						String pattern = contingencyService.getPattern(valuesI);
+						contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
+						 });
+
+			});
+
+			synchronized (contingencyTable) {
+				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
+						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
+			}
+		});*/
+		
+		/*contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+
+		// write to worksetout
+		contingencyTable.forEach((key, value) -> {
+			int idx = 0;
+			for (String nameMatchingVariable : nameMatchingVariables) {
+				contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
+			}
+			contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
+		});
+
+		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
+		// rolesOut.put(codContingencyIndexTable, new
+		// ArrayList<>(coupledIndexByPattern.keySet()));
+
+		returnOut.put(EngineService.ROLES_OUT, rolesOut);
+
+		rolesOut.keySet().forEach(code -> {
+			rolesGroupOut.put(code, code);
+		});
+		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
+
+		worksetOut.put(codContingencyTable, contingencyTableOut);
+		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
+
+		returnOut.put(EngineService.WORKSET_OUT, worksetOut);*/
+		//logService.save("Process Contingency Table Blocking End");
+		return returnOut;
 	}
 
 }
