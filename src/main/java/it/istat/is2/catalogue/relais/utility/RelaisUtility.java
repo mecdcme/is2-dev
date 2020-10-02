@@ -101,5 +101,21 @@ public class RelaisUtility {
 		return ret;
 
 	}
+	
+	public static int getIntField(String jsonString, String fieldName) throws Exception {
+		Integer field = 0;
+		try {
+			
+			JSONObject jSONObject = new JSONObject(jsonString);
+			field = (Integer) jSONObject.get(fieldName);
+
+		} catch (Exception e) {
+
+			throw new Exception("Error parsing parameter " + fieldName);
+		}
+
+		return field.intValue();
+
+	}
 
 }

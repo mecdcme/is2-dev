@@ -85,6 +85,11 @@ public class RelaisService {
 	final static String params_BlockingVariables = "BLOCKING VARIABLES";
 	final static String params_BlockingVariablesA = "BLOCKING A";
 	final static String params_BlockingVariablesB = "BLOCKING B";
+	final static String params_SortedNeghborhood = "SORTED NEIGHBORHOOD";
+	final static String params_SortingVariablesA = "SORTING A";
+	final static String params_SortingVariablesB = "SORTING B";
+	final static String param_WindowSize = "WINDOW";
+	
 	final static String codeBlockingVariablesA = "BA";
 	final static String codeBlockingVariablesB = "BB";
 	final static String params_ReductionMethod = "REDUCTION_METHOD";
@@ -1709,7 +1714,7 @@ public class SNelem implements Comparable<SNelem> {
 	}
 	
 	//pRLContingencyTableSortedNeighborhood
-	public Map<?, ?> newpRLContingencyTableBlockingVariables(Long idelaborazione,
+	public Map<?, ?> pRLContingencyTableSortedNeighborhood(Long idelaborazione,
 			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
 
@@ -1728,21 +1733,35 @@ public class SNelem implements Comparable<SNelem> {
 		final int window;
 
 		final ArrayList<String> variabileNomeListOut = new ArrayList<>();
-		//logService.save("Process Contingency Table Sorted Neighborhood Starting...");
-		/*ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
+		/*log*/System.out.println("dentro pRLContingencyTableSortedNeighborhood");
+		
+		logService.save("Process Contingency Table Sorted Neighborhood Starting...");
+		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
 			variabileNomeListMA.add(varname);
 		});
-		logService.save("Matching variables dataset A: " + variabileNomeListMA);
+		//logService.save("Matching variables dataset A: " + variabileNomeListMA);
 		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
 			variabileNomeListMB.add(varname);
 		});
-		logService.save("Matching variables dataset B: " + variabileNomeListMB);
+		//logService.save("Matching variables dataset B: " + variabileNomeListMB);
 
+		/*log*/System.out.println("leggo sorting a...");
 		sortingVariablesA.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesA));
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood ), params_SortingVariablesA ));
+		/*log*/System.out.println("leggo sorting b...");
 		sortingVariablesB.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesB));
-        window=100;
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood ), params_SortingVariablesB ));
+		final List<String> windowsList = new ArrayList<String>();
+		/*log*/System.out.println("leggo window...");
+		/*error windowsList.addAll(
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood ), param_WindowSize ));*/
+		window = RelaisUtility.getIntField(parametriMap.get(params_SortedNeghborhood ), param_WindowSize);
+        /*log*/System.out.println("letti parametri SNM");
+        
+	/*	sortingVariablesA.add("DS1_SURNAME");
+		sortingVariablesB.add("DS2_SURNAME");
+		window=100; */
+        
         
 		logService.save("Sorting variables dataset A: " + sortingVariablesA);
 		logService.save("Sorting variables dataset B: " + sortingVariablesB);
@@ -1778,57 +1797,73 @@ public class SNelem implements Comparable<SNelem> {
 		int dimA =worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).size();
 		int dimB =worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).size();
 		int count=0;
+		int nVarSort=sortingVariablesA.size();
+		List<Integer[]> listPairs = new ArrayList<>();
 		
 		ArrayList<SNelem> sortlist = new ArrayList<SNelem>();
 		for (int index=0; index < dimA;index++ ) {
-			sortlist.add(new SNelem(0, index, worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).get(index)));
+			String sortKey;
+			sortKey = new String("");
+			for (int numv=0; numv<nVarSort; numv++) {
+				sortKey=sortKey.concat(worksetIn.get(codeMatchingA).get(sortingVariablesA.get(numv)).get(index));
+			}
+			sortlist.add(new SNelem(0, index, sortKey));
 		}
 		for (int index=0; index < dimB;index++ ) {
-			sortlist.add(new SNelem(0, index, worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).get(index)));
+			String sortKey;
+			sortKey = new String("");
+			for (int numv=0; numv<nVarSort; numv++) {
+				sortKey=sortKey.concat(worksetIn.get(codeMatchingB).get(sortingVariablesB.get(numv)).get(index));
+			}
+			sortlist.add(new SNelem(1, index, sortKey));
 		}
+		
 		Collections.sort(sortlist);
+		Integer[] pair;
+		
 		for (int index=0; index < (dimA+dimB);index++ ) {
-			for (int index2=1;index2<=window && (index2+index)<(dimA+dimB);index2++) {
-				if (sortlist.get(index2).dataset>sortlist.get(index).dataset) count++;
-				if (sortlist.get(index2).dataset<sortlist.get(index).dataset) count++;
+			for (int adding=1;adding<window && (adding+index)<(dimA+dimB);adding++) {
+				int index2 = index+adding;
+				
+				if (sortlist.get(index2).dataset>sortlist.get(index).dataset) {
+					pair = new Integer[2];
+					pair[0]=sortlist.get(index).nrow;
+                    pair[1]=sortlist.get(index2).nrow;
+					listPairs.add(pair);
+					count++;
+				}
+				if (sortlist.get(index2).dataset<sortlist.get(index).dataset) {
+					pair = new Integer[2];
+					pair[0]=sortlist.get(index2).nrow;
+                    pair[1]=sortlist.get(index).nrow;
+					listPairs.add(pair);
+					count++;
+				}
 			}
 		}
-		*/
 		
-		/*indexesBlockingVariableA.entrySet().parallelStream().forEach(entry -> {
-			String keyBlock = entry.getKey();
+		System.out.println(" coppie = "+listPairs.size());
 
-			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
-
-
-			// Dataset A
-			entry.getValue().forEach(innerIA -> {
+		// Dataset A
+		for (Integer[] curr : listPairs) {
 
 				final Map<String, String> valuesI = new HashMap<>();
-
+				
 				variabileNomeListMA.forEach(varnameMA -> {
-					valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(innerIA));
+					valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(curr[0]));
 				});
-				if (indexesBlockingVariableB.get(keyBlock) != null)
-					indexesBlockingVariableB.get(keyBlock).forEach(innerIB -> {
+				variabileNomeListMB.forEach(varnameMB -> {
+					valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(curr[1]));
+				});
 
-						variabileNomeListMB.forEach(varnameMB -> {
-							valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(innerIB));
-						});
+				String pattern = contingencyService.getPattern(valuesI);
+					contingencyTable.put(pattern, contingencyTable.get(pattern) + 1);
 
-						String pattern = contingencyService.getPattern(valuesI);
-						contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
-						 });
+		};
 
-			});
-
-			synchronized (contingencyTable) {
-				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
-						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
-			}
-		});*/
 		
-		/*contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		logService.save("Matching variables: " + nameMatchingVariables);
 
 		// write to worksetout
 		contingencyTable.forEach((key, value) -> {
@@ -1840,8 +1875,7 @@ public class SNelem implements Comparable<SNelem> {
 		});
 
 		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
-		// rolesOut.put(codContingencyIndexTable, new
-		// ArrayList<>(coupledIndexByPattern.keySet()));
+		// rolesOut.put(codContingencyIndexTable, new ArrayList<>(coupledIndexByPattern.keySet()));
 
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 
@@ -1853,8 +1887,8 @@ public class SNelem implements Comparable<SNelem> {
 		worksetOut.put(codContingencyTable, contingencyTableOut);
 		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
 
-		returnOut.put(EngineService.WORKSET_OUT, worksetOut);*/
-		//logService.save("Process Contingency Table Blocking End");
+		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
+		logService.save("Process Contingency Table End");
 		return returnOut;
 	}
 
