@@ -1590,6 +1590,29 @@ public class RelaisService {
 
 	}
 	
+public class ReducElem implements Comparable<ReducElem> {
+		
+		public int dataset;
+		public int nrow;
+		public float sortingKey;
+		
+		public ReducElem(int dataset, int nrow, float sortingKey) {
+			this.dataset=dataset;
+			this.nrow=nrow;
+			this.sortingKey=sortingKey;
+		}
+		
+		public int compareTo(ReducElem o) {            
+            if (this.sortingKey > o.sortingKey) {
+            	return 1;
+            }
+            if (this.sortingKey < o.sortingKey) {
+            	return -1;
+            }
+            return 0;
+        }
+	}
+	
 	public Map<?, ?> reducedResultTablesGreedy(Long idelaborazione,
 			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetInn,
 			Map<String, String> parametriMap) throws Exception {
@@ -1614,8 +1637,8 @@ public class RelaisService {
 			variabileNomeListMB.add(varname);
 		});
 
-		logService.save("Matching variables dataset A: " + variabileNomeListMA);
-		logService.save("Matching variables dataset B: " + variabileNomeListMB);
+		//logService.save("Variables dataset A: " + variabileNomeListMA);
+		//logService.save("Variables dataset B: " + variabileNomeListMB);
 
 		variabileNomeListOut.addAll(variabileNomeListMA);
 		variabileNomeListOut.addAll(variabileNomeListMB);
@@ -1639,46 +1662,67 @@ public class RelaisService {
 		Map<String,String> KeyB= new HashMap<String,String>();
 		
 		Map<String, List<String>> matches = worksetInn.get(codMatchingTable);
-		//manca sorting
+
 		int size = matches.get(ROW_IA).size();
 
-		/* IntStream.rangeClosed(0, size).forEach(innerIndex -> */
+		ArrayList<ReducElem> sortlist = new ArrayList<ReducElem>();
 		for (int innerIndex = 0; innerIndex < size; innerIndex++){
-			
-			    if ((! KeyA.containsKey(matches.get(ROW_IA).get(innerIndex))) && 
-			    	(! KeyB.containsKey(matches.get(ROW_IB).get(innerIndex)))) {
+			float ppost = Float.parseFloat(matches.get(codeP_POST).get(innerIndex));
+			sortlist.add(new ReducElem(1,innerIndex,ppost));
+		}
+	    Collections.sort(sortlist);
+	    int reducsize=0;
+		/* IntStream.rangeClosed(0, size).forEach(innerIndex -> */
+		for (ReducElem curr:sortlist){
+			    
+			    if ((! KeyA.containsKey(matches.get(ROW_IA).get(curr.nrow))) && 
+			    	(! KeyB.containsKey(matches.get(ROW_IB).get(curr.nrow)))) {
 		
+			    	reducsize++;
 			    	/*variabileNomeListOut.forEach(varname ->*/
 			    	for (String varname:variabileNomeListOut) {
-			    		matchingTableReduced.get(varname).add(matches.get(varname).get(innerIndex));
+			    		matchingTableReduced.get(varname).add(matches.get(varname).get(curr.nrow));
 				    }
 			    	
-			    	KeyA.put(matches.get(ROW_IA).get(innerIndex),matches.get(ROW_IB).get(innerIndex));
-			    	KeyB.put(matches.get(ROW_IB).get(innerIndex),matches.get(ROW_IA).get(innerIndex));
+			    	KeyA.put(matches.get(ROW_IA).get(curr.nrow),matches.get(ROW_IB).get(curr.nrow));
+			    	KeyB.put(matches.get(ROW_IB).get(curr.nrow),matches.get(ROW_IA).get(curr.nrow));
 			    }
 
 		}
+		
+		logService.save("Match pairs are reduced from " + size + " to "+ reducsize);
 		
 		Map<String, List<String>> pmatches = worksetInn.get(codPossibleMatchingTable);
-		//manca sorting
 
 		size = pmatches.get(ROW_IA).size();
-		/*IntStream.rangeClosed(0, size).forEach(innerIndex ->*/ 
-		for (int innerIndex=0; innerIndex<size; innerIndex++) {
-			
-			    if ((! KeyA.containsKey(pmatches.get(ROW_IA).get(innerIndex))) && 
-			    	(! KeyB.containsKey(pmatches.get(ROW_IB).get(innerIndex)))) {
 		
+		sortlist = new ArrayList<ReducElem>();
+		for (int innerIndex = 0; innerIndex < size; innerIndex++){
+			float ppost = Float.parseFloat(pmatches.get(codeP_POST).get(innerIndex));
+			sortlist.add(new ReducElem(2,innerIndex,ppost));
+		}
+	    Collections.sort(sortlist);
+	    
+	    reducsize=0;
+		/*IntStream.rangeClosed(0, size).forEach(innerIndex ->*/ 
+	    for (ReducElem curr:sortlist){
+			
+			    if ((! KeyA.containsKey(pmatches.get(ROW_IA).get(curr.nrow))) && 
+			    	(! KeyB.containsKey(pmatches.get(ROW_IB).get(curr.nrow)))) {
+		
+			    	reducsize++;
 			    	/*variabileNomeListOut.forEach(varname ->*/ 
 			    	for (String varname : variabileNomeListOut) {
-			    		possibleTableReduced.get(varname).add(pmatches.get(varname).get(innerIndex));
+			    		possibleTableReduced.get(varname).add(pmatches.get(varname).get(curr.nrow));
 				    }
 			    	
-			    	KeyA.put(pmatches.get(ROW_IA).get(innerIndex),pmatches.get(ROW_IB).get(innerIndex));
-			    	KeyB.put(pmatches.get(ROW_IB).get(innerIndex),pmatches.get(ROW_IA).get(innerIndex));
+			    	KeyA.put(pmatches.get(ROW_IA).get(curr.nrow),pmatches.get(ROW_IB).get(curr.nrow));
+			    	KeyB.put(pmatches.get(ROW_IB).get(curr.nrow),pmatches.get(ROW_IA).get(curr.nrow));
 			    }
 
 		}
+	    
+	    logService.save("Possiblematch pairs are reduced from " + size + " to "+ reducsize);
 
 		
 		//end elab
