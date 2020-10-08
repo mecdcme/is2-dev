@@ -1935,5 +1935,109 @@ public class SNelem implements Comparable<SNelem> {
 		logService.save("Process Contingency Table End");
 		return returnOut;
 	}
+	
+	public Map<?, ?> createResiduals(Long idelaborazione,
+			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
+			Map<String, String> parametriMap) throws Exception {
+
+		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
+		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
+		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
+		final Map<String, String> rolesGroupOut = new HashMap<>();
+
+		logService.save("Creation of residual datasets starting...");
+
+		ArrayList<String> variabileNomeListMA = new ArrayList<>();
+		ArrayList<String> variabileNomeListMB = new ArrayList<>();
+
+		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
+			variabileNomeListMA.add(varname);
+		});
+		/*worksetIn.get(codeMatchingA).keySet().forEach((varname) -> {
+			variabileNomeListMA.add(varname);
+		});*/
+
+		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
+			variabileNomeListMB.add(varname);
+		});
+
+		logService.save("Variables dataset A: " + variabileNomeListMA);
+		logService.save("Variables dataset B: " + variabileNomeListMB);
+
+		rolesOut.put(codResidualA, variabileNomeListMA);
+		rolesOut.put(codResidualB, variabileNomeListMB);
+		
+		// start elab
+		
+		final Map<String, ArrayList<String>> residualA = Collections.synchronizedMap(new LinkedHashMap<>());
+		final Map<String, ArrayList<String>> residualB = Collections.synchronizedMap(new LinkedHashMap<>());
+
+		variabileNomeListMA.forEach(varname -> {
+			residualA.put(varname, new ArrayList<>());
+		});
+		variabileNomeListMB.forEach(varname -> {
+			residualB.put(varname, new ArrayList<>());
+		});
+
+		Map<String,String> KeyA= new HashMap<String,String>();
+		Map<String,String> KeyB= new HashMap<String,String>();
+		
+		Map<String, List<String>> matches = worksetIn.get(codMatchingTableReduced);
+		if (matches == null) {
+			matches = worksetIn.get(codMatchingTable);
+		}
+
+		int size = matches.get(ROW_IA).size();
+
+		System.out.println("calcolata dimensione "+size);
+
+		for (int innerIndex = 0; innerIndex < size; innerIndex++){
+			KeyA.put(matches.get(ROW_IA).get(innerIndex),matches.get(ROW_IB).get(innerIndex));
+	    	KeyB.put(matches.get(ROW_IB).get(innerIndex),matches.get(ROW_IA).get(innerIndex));
+		}
+		
+	    int ressize=0;
+	    
+	    int dimset = worksetIn.get(codeMatchingA).get(variabileNomeListMA.get(0)).size();
+	    
+	    for (int innerIndex=0; innerIndex < dimset; innerIndex++) {
+	    	if (!KeyA.containsKey(Integer.toString(innerIndex))) {
+	    		for (String varname:variabileNomeListMA) {
+	    			residualA.get(varname).add(worksetIn.get(codeMatchingA).get(varname).get(innerIndex));
+	    		};	
+	    		ressize++;
+	    	}
+	    }
+	    
+	    System.out.println("residualA size "+ressize);
+	    
+        ressize=0;
+	    
+	    dimset = worksetIn.get(codeMatchingB).get(variabileNomeListMB.get(0)).size();
+	    
+	    for (int innerIndex=0; innerIndex < dimset; innerIndex++) {
+	    	if (!KeyB.containsKey(Integer.toString(innerIndex))) {
+	    		for (String varname:variabileNomeListMB) {
+	    			residualB.get(varname).add(worksetIn.get(codeMatchingB).get(varname).get(innerIndex));
+	    		};	
+	    		ressize++;
+	    	}
+	    }
+	    
+	    System.out.println("residualB size "+ressize);
+		
+		//end elab
+
+		returnOut.put(EngineService.ROLES_OUT, rolesOut);
+		rolesOut.keySet().forEach(code -> {
+			rolesGroupOut.put(code, code);
+		});
+		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
+
+		worksetOut.put(codResidualA, residualA);
+		worksetOut.put(codResidualB, residualB);
+		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
+		return returnOut;
+	}
 
 }
