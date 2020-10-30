@@ -58,6 +58,7 @@ public class RelaisService {
 
 	final static int stepService = 250;
 	final static int sizeFlushed = 20;
+	final static int MAXINDEXNUM = 100000;
 	final static String INDEX_SEPARATOR = ";";
 	final static String PREFIX_PATTERN = "P_";
 
@@ -220,16 +221,16 @@ public class RelaisService {
 
 			int inf = (chunkIndex * CHUNK_SIZE);
 			int sup = (chunkIndex == partitionSize - 1) ? sizeA - 1 : (inf + CHUNK_SIZE - 1);
+			
 
 			// final ContingencyService contingencyServicelocal=new ContingencyService();
 			// contingencyServicelocal.init(parametriMap.get(params_MatchingVariables));
 			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
-			 final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
-			 
+			final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
+			
 			IntStream.rangeClosed(inf, sup).forEach(innerIA -> {
 
 				final Map<String, String> valuesI = new HashMap<>();
-			
 
 				variabileNomeListMA.forEach(varnameMA -> {
 					valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(innerIA));
@@ -243,14 +244,12 @@ public class RelaisService {
 				//	Instant start1 = Instant.now();
 					String pattern = contingencyService.getPattern(valuesI);
 				///	System.out.println(Duration.between(start1, Instant.now()).toNanos() + " " + valuesI); // in millis
-					contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
-					 if (Integer.parseInt(pattern) > 0){
-					 String phrase = (innerIA + 1) + ";" + (innerIB + 1);
-					 coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add(phrase); //
-					// store
-					// // no
-					// // zero
-					// // based
+					int freq = contingencyTableIA.get(pattern);
+				    contingencyTableIA.put(pattern, freq + 1);
+						
+					if (Integer.parseInt(pattern) > 0 && freq < MAXINDEXNUM) {
+					    String phrase = (innerIA + 1) + ";" + (innerIB + 1);
+					    coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add(phrase);
 					}
 				});
 			});
@@ -260,9 +259,16 @@ public class RelaisService {
 						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
 			}
 			
-			  synchronized (coupledIndexByPattern) {
-			 coupledIndexByPatternIA.entrySet().stream().forEach( e ->
-			 coupledIndexByPattern.get(e.getKey()).addAll(coupledIndexByPatternIA.get(e. getKey())));
+			synchronized (coupledIndexByPattern) {
+			    //coupledIndexByPatternIA.entrySet().stream().forEach( e ->
+				contingencyTableIA.entrySet().stream().forEach(e -> 
+		          {
+		        	String pattern =e.getKey();
+		        	System.out.println("elab"+pattern);
+		        	if (Integer.parseInt(pattern) > 0 && contingencyTable.get(pattern) <= MAXINDEXNUM)
+		                coupledIndexByPattern.get(PREFIX_PATTERN + pattern).addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
+		          }
+			    );
 			 }
 			
 		});
@@ -513,9 +519,10 @@ public class RelaisService {
 						});
 
 						String pattern = contingencyService.getPattern(valuesI);
-						contingencyTableIA.put(pattern, contingencyTableIA.get(pattern) + 1);
-						
-						if (Integer.parseInt(pattern) > 0) 
+						int freq = contingencyTableIA.get(pattern);
+					    contingencyTableIA.put(pattern, freq + 1);
+							
+						if (Integer.parseInt(pattern) > 0 && freq < MAXINDEXNUM) 
 							coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add((innerIA + 1) + ";" + (innerIB + 1)); // store no zero based
 
 				    });
@@ -528,8 +535,14 @@ public class RelaisService {
 			}
 
 			synchronized (coupledIndexByPattern) {
-			    coupledIndexByPatternIA.entrySet().stream().forEach( e -> 
-			            coupledIndexByPattern.get(e.getKey()).addAll(coupledIndexByPatternIA.get(e.getKey()))); 
+			    //coupledIndexByPatternIA.entrySet().stream().forEach( e -> 
+				contingencyTableIA.entrySet().stream().forEach(e -> 
+			        {
+			        	String pattern =e.getKey();
+			        	if (Integer.parseInt(pattern) > 0 && contingencyTable.get(pattern) <= MAXINDEXNUM)
+			                coupledIndexByPattern.get(PREFIX_PATTERN + pattern).addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
+			        }
+			    ); 
 			}
 			 
 		});
@@ -1922,6 +1935,7 @@ public class SNelem implements Comparable<SNelem> {
 		}
 		
 		System.out.println(" coppie = "+listPairs.size());
+		int freq;
 
 		// contingency evaluation
 		for (Integer[] curr : listPairs) {
@@ -1936,9 +1950,10 @@ public class SNelem implements Comparable<SNelem> {
 				});
 
 				String pattern = contingencyService.getPattern(valuesI);
-					contingencyTable.put(pattern, contingencyTable.get(pattern) + 1);
+				freq = contingencyTable.get(pattern);
+			    contingencyTable.put(pattern, freq + 1);
 					
-				if (Integer.parseInt(pattern) > 0) 
+				if (Integer.parseInt(pattern) > 0 && freq < MAXINDEXNUM) 
 					coupledIndexByPattern.get(PREFIX_PATTERN + pattern).add((curr[0] + 1) + ";" + (curr[1] + 1)); // store no zero based
 
 
@@ -2054,20 +2069,21 @@ public class SNelem implements Comparable<SNelem> {
 				   RelaisUtility.getEmptyMapByKey( contingencyTable.keySet().stream().filter(key -> Integer.parseInt(key) > 0), PREFIX_PATTERN);
 
 
-		int dimA =worksetIn.get(codeMatchingA).get(hashVariablesA.get(0)).size();
-		int totRec=dimA;
-		int dimB=0;
+		final int dimA =worksetIn.get(codeMatchingA).get(hashVariablesA.get(0)).size();
+		
+		int dim2 = 0;
 		if (!dedup) {
-			dimB =worksetIn.get(codeMatchingB).get(hashVariablesB.get(0)).size();
-			totRec=dimA+dimB;
-		}
+			 dim2 =worksetIn.get(codeMatchingB).get(hashVariablesB.get(0)).size();
+		} 
+		
+		final int dimB=dim2;
+		final int totRec=dimA+dimB;
 		
 		int count=0;
 		int nVarSort=hashVariablesA.size();
 		
 		List<Integer[]> listPairs = new ArrayList<>();
 		
-		Simhash sh = new Simhash(hdThr,rotations,gramdim,weights);
 		
 		/*HashMap wgrams = new HashMap();
 		HashMap wgramsi = new HashMap();
@@ -2083,32 +2099,74 @@ public class SNelem implements Comparable<SNelem> {
 		         }
 		      }
 		}*/
-		ArrayList<Simhash.HashRec> set = new ArrayList<Simhash.HashRec>();
-		HashMap<String,String> ssr = new HashMap<String,String>();
 		
-		for (int index=0; index < dimA;index++ ) {
-			String hashKey;
-			hashKey = new String("");
-			for (int numv=0; numv<nVarSort; numv++) {
-				hashKey=hashKey.concat(worksetIn.get(codeMatchingA).get(hashVariablesA.get(numv)).get(index));
-			}
-			set.add(sh.new HashRec(0,index,hashKey,hashdim,totRec,weights));
-		}
+		ArrayList<Simhash.HashRec> set = new ArrayList<Simhash.HashRec>();
+	    HashMap<String,String> ssr = new HashMap<String,String>();
+	    
+		//parallel eval of hash fingerprints
+		final int CHUNK_SIZE = 8;
+		
+		int partitionSizeA = (dimA / CHUNK_SIZE) + ((dimA % CHUNK_SIZE) == 0 ? 0 : 1);
+		int partitionSizeB = (dimB / CHUNK_SIZE) + ((dimB % CHUNK_SIZE) == 0 ? 0 : 1);
+				
+		IntStream.range(0, partitionSizeA).parallel().forEach(chunkIndex -> {
+
+			int inf = (chunkIndex * CHUNK_SIZE);
+			int sup = (chunkIndex == partitionSizeA - 1) ? dimA - 1 : (inf + CHUNK_SIZE - 1);
+			
+		    Simhash sh = new Simhash(hdThr,rotations,gramdim,weights);
+		    ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
+		
+		    for (int index=inf; index <= sup;index++ ) {
+			   String hashKey;
+			   hashKey = new String("");
+			   for (int numv=0; numv<nVarSort; numv++) {
+				   hashKey=hashKey.concat(worksetIn.get(codeMatchingA).get(hashVariablesA.get(numv)).get(index));
+			   }
+			   try {
+				   setI.add(sh.new HashRec(0,index,hashKey,hashdim,totRec,weights));
+			   } catch (Exception e) {
+				   e.printStackTrace();
+			   }
+		    }
+
+		    //syncronise
+		    synchronized (set) {
+			    set.addAll(setI);
+		    }
+		});
+		    
 		if (!dedup) {
-		  for (int index=0; index < dimB;index++ ) {
-			String hashKey;
-			hashKey = new String("");
-			for (int numv=0; numv<nVarSort; numv++) {
-				hashKey=hashKey.concat(worksetIn.get(codeMatchingB).get(hashVariablesB.get(numv)).get(index));
-			}
-			set.add(sh.new HashRec(1,index,hashKey,hashdim,totRec,weights));
-		  }
+		    IntStream.range(0, partitionSizeB).parallel().forEach(chunkIndex -> {
+		    	int inf = (chunkIndex * CHUNK_SIZE);
+				int sup = (chunkIndex == partitionSizeB - 1) ? dimB - 1 : (inf + CHUNK_SIZE - 1);
+		    
+				Simhash sh = new Simhash(hdThr,rotations,gramdim,weights);
+			    ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
+			    
+		        for (int index=inf; index <= sup;index++ ) {
+			        String hashKey;
+			        hashKey = new String("");
+			        for (int numv=0; numv<nVarSort; numv++) {
+				         hashKey=hashKey.concat(worksetIn.get(codeMatchingB).get(hashVariablesB.get(numv)).get(index));
+			        }
+			        try {
+						setI.add(sh.new HashRec(1,index,hashKey,hashdim,totRec,weights));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+		        }
+		        
+			    //syncronise
+			    synchronized (set) {
+				    set.addAll(setI);
+			    }
+		    });
 		}
 		System.out.println(" hash decoding terminated");
 		
 		Simhash.HashRec h1;
 		Simhash.HashRec h2;
-		int confronti=0;
 		int soglia=hdThr;
         int soglia2=(int) (hdThr*0.75);
 		int outsoglia=hashdim;
@@ -2151,7 +2209,7 @@ public class SNelem implements Comparable<SNelem> {
 		             h1=set.get(ix);
 		             h2=set.get(ix2);
 					 if (h1.ds!=h2.ds || dedup) {
-					    confronti++;
+					    //confronti++;
 						if (inv==0)
 						   dist=Simhash.hashdist(h1.hashcode,h2.hashcode);
 						else
@@ -2195,6 +2253,7 @@ public class SNelem implements Comparable<SNelem> {
 		          h.progres(gradino,inv);
 		    }
 		
+		int freq;
 		for (Integer[] curr : listPairs) {
 
 			final Map<String, String> valuesI = new HashMap<>();
@@ -2207,9 +2266,10 @@ public class SNelem implements Comparable<SNelem> {
 			});
 
 			String pattern = contingencyService.getPattern(valuesI);
-				contingencyTable.put(pattern, contingencyTable.get(pattern) + 1);
+			freq = contingencyTable.get(pattern);
+		    contingencyTable.put(pattern, freq + 1);
 				
-			if (Integer.parseInt(pattern) > 0) 
+			if (Integer.parseInt(pattern) > 0 && freq < MAXINDEXNUM) 
 				coupledIndexByPattern.get(PREFIX_PATTERN + pattern).add((curr[0] + 1) + ";" + (curr[1] + 1)); // store no zero based
 
 
