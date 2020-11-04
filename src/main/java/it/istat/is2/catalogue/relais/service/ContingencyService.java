@@ -33,16 +33,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
-import it.istat.is2.catalogue.relais.metrics.DiceSimilarity;
-import it.istat.is2.catalogue.relais.metrics.Jaro;
-import it.istat.is2.catalogue.relais.metrics.JaroWinkler;
-import it.istat.is2.catalogue.relais.metrics.Levenshtein;
-import it.istat.is2.catalogue.relais.metrics.QGramsDistance;
-import it.istat.is2.catalogue.relais.metrics.Soundex;
-import it.istat.is2.catalogue.relais.metrics.added.NumericComparison;
-import it.istat.is2.catalogue.relais.metrics.added.NumericEuclideanDistance;
-import it.istat.is2.catalogue.relais.metrics.added.QGramsInclusion;
-import it.istat.is2.catalogue.relais.metrics.added.WindowEquality;
+import it.istat.is2.catalogue.relais.metrics.*;
+import it.istat.is2.catalogue.relais.metrics.added.*;
 import it.istat.is2.catalogue.relais.metrics.dataStructure.MetricMatchingVariable;
 import it.istat.is2.catalogue.relais.metrics.dataStructure.MetricMatchingVariableVector;
 import it.istat.is2.catalogue.relais.metrics.utility.AbstractStringMetric;
@@ -108,6 +100,8 @@ public class ContingencyService implements Serializable {
 				metrics[ind] = new WindowEquality(metricMatchingVariableVector.get(ind));
 			else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Inclusion3Grams"))
 				metrics[ind] = new QGramsInclusion();
+			else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("SimHash"))
+				metrics[ind] = new Simhash();
          
         }
 
