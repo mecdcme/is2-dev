@@ -194,7 +194,7 @@ public class RelaisService {
 		int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables));
+			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -340,7 +340,7 @@ public class RelaisService {
 		int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables));
+			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -467,7 +467,7 @@ public class RelaisService {
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables));
+			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -709,7 +709,7 @@ public class RelaisService {
 		rolesOut.put(codResidualB, variabileNomeListMB);
 		rolesOut.put(codQualityIndicators, variableQuality);
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables));
+		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 			possibleMatchingTable.put(varname, new ArrayList<>());
@@ -927,7 +927,7 @@ public class RelaisService {
 		int sizeA = worksetInn.get(codeMatchingA).get(firstFiledMA).size();
 		int sizeB = worksetInn.get(codeMatchingB).get(firstFiledMB).size();
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables));
+		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 			possibleMatchingTable.put(varname, new ArrayList<>());
@@ -1455,7 +1455,7 @@ public class RelaisService {
 		int sizeA = worksetInn.get(codeMatchingA).get(firstFiledMA).size();
 		int sizeB = worksetInn.get(codeMatchingB).get(firstFiledMB).size();
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables));
+		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 
@@ -1558,7 +1558,7 @@ public class RelaisService {
 
 		rolesOut.put(codMatchingTable, variabileNomeListOut);
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables));
+		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 
@@ -1860,7 +1860,7 @@ public class SNelem implements Comparable<SNelem> {
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables));
+			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -2043,7 +2043,7 @@ public class SNelem implements Comparable<SNelem> {
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables));
+			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);

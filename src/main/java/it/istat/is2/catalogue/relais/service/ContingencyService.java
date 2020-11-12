@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,7 +57,7 @@ public class ContingencyService implements Serializable {
     private int[][] combinations;
     private AbstractStringMetric[] metrics;
 
-    public void init(String stringJson) throws JSONException {
+    public void init(String stringJson,Map <String, List<String>> dsa,Map <String, List<String>> dsb) throws JSONException {
         metricMatchingVariableVector = new MetricMatchingVariableVector();
         JSONArray metricMatchingVariables = new JSONArray(stringJson);
         for (int i = 0; i < metricMatchingVariables.length(); i++) {
@@ -102,6 +103,11 @@ public class ContingencyService implements Serializable {
 				metrics[ind] = new QGramsInclusion();
 			else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("SimHash"))
 				metrics[ind] = new Simhash();
+			else if (metricMatchingVariableVector.get(ind).getComparisonFunction().equals("Weighed3Grams")) {
+				metrics[ind] = new Likeness();
+				metrics[ind].prepareMap(dsa.get(metricMatchingVariableVector.get(ind).getMatchingVariableNameVariableA()));
+				metrics[ind].prepareMap(dsb.get(metricMatchingVariableVector.get(ind).getMatchingVariableNameVariableB()));
+			}
          
         }
 

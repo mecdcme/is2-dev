@@ -1,5 +1,7 @@
 package it.istat.is2.catalogue.relais.metrics.utility;
 
+import java.util.List;
+
 public abstract class AbstractStringMetric implements InterfaceStringMetric {
 
     public abstract String getShortDescriptionString();
@@ -7,6 +9,9 @@ public abstract class AbstractStringMetric implements InterfaceStringMetric {
     public abstract String getLongDescriptionString();
 
     public abstract String getSimilarityExplained(final StringBuilder string1, final StringBuilder string2);
+    
+    public void prepareMap(List<String> stringList) {
+    }
 
     public final long getSimilarityTimingActual(final StringBuilder string1, final StringBuilder string2) {
         final long timeBefore = System.currentTimeMillis();

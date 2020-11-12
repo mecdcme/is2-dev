@@ -100,7 +100,7 @@ public class SparkService {
         int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
         try {
-            contingencyService.init(parametriMap.get(params_MatchingVariables));
+            contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
         } catch (Exception e) {
             ////logService.save("Error parsing " + params_MatchingVariables);
             throw new Exception("Error parsing " + params_MatchingVariables);
@@ -242,7 +242,7 @@ public class SparkService {
         int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
         try {
-            contingencyService.init(parametriMap.get(params_MatchingVariables));
+            contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
         } catch (Exception e) {
             ////logService.save("Error parsing " + params_MatchingVariables);
             throw new Exception("Error parsing " + params_MatchingVariables);
