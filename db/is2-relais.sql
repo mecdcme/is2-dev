@@ -87,9 +87,6 @@ INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent
 INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (76, 'Deterministic Record Linkage', 'Deterministic Record Linkage', 'DRL', 2, 2);
 INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (178, 'Residuals', 'Create residuals', 'Residuals', 4, 2);
 --
- 
-
-
 
 
 

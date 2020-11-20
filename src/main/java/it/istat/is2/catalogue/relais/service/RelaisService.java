@@ -597,7 +597,7 @@ public class RelaisService {
 		return returnOut;
 	}
 
-	//used ?
+	//used?
 	public Map<?, ?> probabilisticResultTables(final Long idelaborazione,
 			final Map<String, ArrayList<String>> ruoliVariabileNome,
 			final Map<String, Map<String, List<String>>> worksetIn, final Map<String, String> parametriMap)
