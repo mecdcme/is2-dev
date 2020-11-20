@@ -10,7 +10,7 @@ INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALU
 INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template)  VALUES (3, 'THRESHOLD UNMATCHING', 'THRESHOLD UNMATCHING', '1', '{"data":[],"schema":{"name":"THRESHOLD UNMATCHING","type":"number", "minimum": 0.01,"maximum": 1}}');
 
 INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALUES (5, 'BLOCKING VARIABLES', 'BLOCKING VARIABLES', NULL, '{"data":[],"schema":{"type":"object", "properties": { "BLOCKING_A": { "type":"array", "title":"BLOCKING A","items": {"type": "string"} }, "BLOCKING_B": { "type":"array", "title":"BLOCKING B" ,"items": {"type": "string"}} }}, "options": {"fields":{"BLOCKING_A":{"type":"array",    "toolbarSticky": true,"items":{"type":"select","noneLabel":"","dataSource":"matchedVariables"}},"BLOCKING_B":{"type":"array",   "toolbarSticky": true, "items":{"type":"select","noneLabel":"","dataSource":"matchedVariables"}}}}}');
-INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALUES (20, 'REDUCTION METHOD', 'REDUCTION METHOD', NULL, '{"data":[],"schema":{"type":"object","properties":{"REDUCTION-METHOD":{"type":"string","enum":["CartesianProduct","BlockingVariables","SortedNeighborhood","SimHash","CartesianProductSpark"]},"BLOCKING VARIABLES":{"type":"object","hidden":true,"name":"BLOCKING VARIABLES","properties":{"BLOCKING A":{"type":"array","required":false,"title":"BLOCKING A","items":{"type":"string"},"properties":{}},"BLOCKING B":{"type":"array","required":false,"title":"BLOCKING B","items":{"type":"string"},"properties":{}}}},"SORTED NEIGHBORHOOD":{"type":"object","hidden":true,"name":"SORTING VARIABLES","properties":{"SORTING A":{"type":"array","required":false,"title":"SORTING A","items":{"type":"string"},"properties":{}},"SORTING B":{"type":"array","required":false,"title":"SORTING B","items":{"type":"string"},"properties":{}},"WINDOW":{"title":"WINDOW","type":"integer","width":"10"}}},"SIMHASH":{"type":"object","hidden":true,"name":"SHINGLING VARIABLES","properties":{"SHINGLING A":{"type":"array","required":false,"title":"SHINGLING A","items":{"type":"string"},"properties":{}},"SHINGLING B":{"type":"array","required":false,"title":"SHINGLING B","items":{"type":"string"},"properties":{}},"HDTHRESHOLD":{"type":"string","items":{"type":"string"},"required":true},"ROTATIONS":{"type":"string","title":"NUMBER OF ROTATIONS","items":{"type":"string"},"required":true}}}}},"options":{"fields":{"REDUCTION-METHOD":{"type":"select","label":"REDUCTION METHOD","removeDefaultNone":true,"id":"REDUCTION-METHOD","sort":false,"optionLabels":["CARTESIAN PRODUCT","BLOCKING VARIABLES","SORTED NEIGHBORHOOD","SIMHASH","ContingencyTableCartesianProductSpark"]},"BLOCKING VARIABLES":{"type":"object","fields":{"BLOCKING A":{"label":"BLOCKING A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"BLOCKING B":{"label":"BLOCKING B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"}}},"SORTED NEIGHBORHOOD":{"type":"object","fields":{"SORTING A":{"label":"SORTING KEY A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"SORTING B":{"label":"SORTING KEY B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"}}},"SIMHASH":{"type":"object","fields":{"SHINGLING A":{"label":"SHINGLING KEY A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"SHINGLING B":{"label":"SHINGLING KEY B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"},"HDTHRESHOLD":{"label":"HAMMING DISTANCE THRESHOLD","type":"select","removeDefaultNone":true,"dataSource":["30","35","40","45","50"]},"ROTATIONS":{"label":"NUMBER OF ROTATIONS","type":"select","removeDefaultNone":true,"dataSource":[" 4"," 8","16","32"]}}}}},"postRender":"reduction"}');
+INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALUES (20, 'REDUCTION METHOD', 'REDUCTION METHOD', NULL, '{"data":[],"schema":{"type":"object","properties":{"REDUCTION-METHOD":{"type":"string","enum":["CartesianProduct","BlockingVariables","SortedNeighborhood","SimHash"]},"BLOCKING VARIABLES":{"type":"object","hidden":true,"name":"BLOCKING VARIABLES","properties":{"BLOCKING A":{"type":"array","required":false,"title":"BLOCKING A","items":{"type":"string"},"properties":{}},"BLOCKING B":{"type":"array","required":false,"title":"BLOCKING B","items":{"type":"string"},"properties":{}}}},"SORTED NEIGHBORHOOD":{"type":"object","hidden":true,"name":"SORTING VARIABLES","properties":{"SORTING A":{"type":"array","required":false,"title":"SORTING A","items":{"type":"string"},"properties":{}},"SORTING B":{"type":"array","required":false,"title":"SORTING B","items":{"type":"string"},"properties":{}},"WINDOW":{"title":"WINDOW","type":"integer","width":"10"}}},"SIMHASH":{"type":"object","hidden":true,"name":"SHINGLING VARIABLES","properties":{"SHINGLING A":{"type":"array","required":false,"title":"SHINGLING A","items":{"type":"string"},"properties":{}},"SHINGLING B":{"type":"array","required":false,"title":"SHINGLING B","items":{"type":"string"},"properties":{}},"HDTHRESHOLD":{"type":"string","items":{"type":"string"},"required":true},"ROTATIONS":{"type":"string","title":"NUMBER OF ROTATIONS","items":{"type":"string"},"required":true}}}}},"options":{"fields":{"REDUCTION-METHOD":{"type":"select","label":"REDUCTION METHOD","removeDefaultNone":true,"id":"REDUCTION-METHOD","sort":false,"optionLabels":["CARTESIAN PRODUCT","BLOCKING VARIABLES","SORTED NEIGHBORHOOD","SIMHASH"]},"BLOCKING VARIABLES":{"type":"object","fields":{"BLOCKING A":{"label":"BLOCKING A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"BLOCKING B":{"label":"BLOCKING B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"}}},"SORTED NEIGHBORHOOD":{"type":"object","fields":{"SORTING A":{"label":"SORTING KEY A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"SORTING B":{"label":"SORTING KEY B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"}}},"SIMHASH":{"type":"object","fields":{"SHINGLING A":{"label":"SHINGLING KEY A","type":"select","multiple":true,"removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X1"},"SHINGLING B":{"label":"SHINGLING KEY B","type":"select","removeDefaultNone":true,"dataSource":"matchedVariablesbyRoles.X2"},"HDTHRESHOLD":{"label":"HAMMING DISTANCE THRESHOLD","type":"select","removeDefaultNone":true,"dataSource":["30","35","40","45","50"]},"ROTATIONS":{"label":"NUMBER OF ROTATIONS","type":"select","removeDefaultNone":true,"dataSource":[" 4"," 8","16","32"]}}}}},"postRender":"reduction"}');
 INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALUES (21, 'INDEXES MATCHED', 'INDEXES MATCHED', NULL, NULL);
 
 
@@ -83,7 +83,9 @@ INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent
 INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (5, 'Probabilistic Record Linkage Batch', 'Probabilistic Record Linkage Batch', 'PRL batch', 1, NULL);
 INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (73, 'PRL batch', 'One process with all workflow steps  ', 'PRL batch', 1, 5);
 
-INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (76, 'Deterministic Record Linkage', 'Deterministic Record Linkage', 'DRL', 1, 2);
+INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (170, 'Contingency Table', 'Calculate contingency table', 'CrossTable', 1, 2);
+INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (76, 'Deterministic Record Linkage', 'Deterministic Record Linkage', 'DRL', 2, 2);
+INSERT INTO is2.is2_business_process (id, name, descr, label, order_code, parent)  VALUES (178, 'Residuals', 'Create residuals', 'Residuals', 4, 2);
 --
  
 
@@ -158,7 +160,7 @@ INSERT INTO is2.is2_process_step ( id, name, label, descr, business_service_id) 
 INSERT INTO is2.is2_process_step ( id, name, label, descr, business_service_id)  VALUES (77, 'Matching constraint (optional)', 'MATCHING_TABLE_REDUCED','Constraint apply on matches', 200);
 INSERT INTO is2.is2_process_step ( id, name, label, descr, business_service_id)  VALUES (78, 'Residuals (optional)', 'RESIDUALS','Create residuals (not matched)', 200);
 
-INSERT INTO is2.is2_process_step  ( id, name, label, descr, business_service_id) VALUES (76, 'Deterministic Record Linkage','DETERMINISTIC_RECORD_LINKAGE', 'Deterministic Record Linkage unique step', 200);
+INSERT INTO is2.is2_process_step  ( id, name, label, descr, business_service_id) VALUES (76, 'Deterministic Matching Table','DETERMINISTIC_MATCHING_TABLE', 'Deterministic Matching records', 200);
 
 
 --
@@ -178,7 +180,9 @@ INSERT INTO is2.is2_link_process_step VALUES (73, 70);
 INSERT INTO is2.is2_link_process_step VALUES (73, 71);
 INSERT INTO is2.is2_link_process_step VALUES (73, 72);
 
+INSERT INTO is2.is2_link_process_step VALUES (170, 70);
 INSERT INTO is2.is2_link_process_step VALUES (76, 76);
+INSERT INTO is2.is2_link_process_step VALUES (178, 78);
 
 
 --
@@ -195,7 +199,7 @@ INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VA
 
 -- INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (15, 'contingencyTableBlocking', 'This function calculates the contingency Table with Blocking variable', 'ContingencyTableBlocking', 250);
 -- INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (16, 'resultTablesBlocking', 'This function calculates the Matching Table with Blocking variable', 'MatchingTableBlocking', 250);
-INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (20, 'deterministicRecordLinkage', 'This function calculates the Matching Table with Deterministic Record Linkage', 'DeterministicRecordLinkage', 250);
+INSERT INTO is2.is2_step_instance (id, method, descr, label, app_service_id)  VALUES (20, 'deterministicResultTablesByIndex', 'This function calculates the Matching Table with Deterministic Rule', 'MatchingTable', 250);
 
 --
 -- TOC entry 4935 (class 0 OID 25249)
@@ -281,10 +285,15 @@ INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_ins
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (214, 0, 13, 15, 2);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (215, 0, 14, 15, 2);
 
-INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (200, 1, 1, 20, 1);
+--INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (200, 1, 1, 20, 1);
+--INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (201, 1, 2, 20, 1);
+--INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (202, 1, 3, 20, 1);
+--INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (203, 1, 20, 20, 1);
+--INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (204, 1, 7, 20, 2);
+
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (200, 0, 4, 20, 1);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (201, 1, 2, 20, 1);
 INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (202, 1, 3, 20, 1);
-INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (203, 1, 20, 20, 1);
-INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (204, 1, 7, 20, 2);
-
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (203, 1, 21, 20, 1);
+INSERT INTO is2.is2_step_instance_signature (id, required, app_role_id, step_instance_id, cls_type_io_id) VALUES (204, 0, 7, 20, 2);
 
