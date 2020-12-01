@@ -85,7 +85,7 @@ public class RelaisService {
 	final static String params_MatchingVariables = "MATCHING_VARIABLES";
 	final static String params_ThresholdMatching = "THRESHOLD_MATCHING";
 	final static String params_ThresholdUnMatching = "THRESHOLD_UNMATCHING";
-	final static String params_BlockingVariables = "BLOCKING";
+	final static String params_BlockingVariables = "BLOCKING"; 
 	final static String params_BlockingVariablesA = "BLOCKING A";
 	final static String params_BlockingVariablesB = "BLOCKING B";
 	final static String params_SortedNeghborhood = "SORTED NEIGHBORHOOD";

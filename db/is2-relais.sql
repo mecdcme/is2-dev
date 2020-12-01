@@ -15,7 +15,6 @@ INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template) VALU
 
 INSERT INTO is2.is2_parameter (id, name, descr, default_val, json_template)  VALUES (30, 'P', 'MATCH FREQUENCY IN SEARCH SPACE', NULL, '{"data":[],"schema":{"name":"P","type":"number", "minimum": 0.000001,"maximum": 1}}');
 
-
 -- TOC entry 4938 (class 0 OID 25260)
 -- Dependencies: 259
 -- Data for Name: is2_app_role; Type: TABLE DATA; Schema: is2; Owner: -

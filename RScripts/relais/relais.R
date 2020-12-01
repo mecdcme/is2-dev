@@ -314,7 +314,6 @@ mufrommarginals <- function(workset, roles, wsparams=NULL, ...) {
  mp_u <- workset$MPU
  conting <- workset$CT
  
-
  mfreq <- as.numeric(wsparams$P)
  print(c("P=",mfreq))
  

@@ -215,7 +215,7 @@ public class EngineREnjin extends EngineR implements EngineService {
             }
              
             engine.eval(varR + " <- list(" + listaCampi.substring(0, listaCampi.length() - 1) + ")");
-            engine.eval("names("+varR + ") <- c(" + nomeCampi.substring(0, nomeCampi.length() - 1) + ")");
+            engine.eval("names("+varR + ") <- c(" + nomeCampi.substring(0, nomeCampi.length() - 1) + ")"); 
 
         }
     }
