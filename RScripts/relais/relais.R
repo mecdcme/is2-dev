@@ -10,7 +10,6 @@ rm(list=ls())
 #percorso_fail=path del file contenete le condizionate alla variabile latente, nel caso di stima ** non affidabile** del modello
 #eps,iter parametri del modello EM con valori di default
 
-
 #percorso_fail="FSFail.Rout"
 #percorso_allert="FSAllert.Rout"
 

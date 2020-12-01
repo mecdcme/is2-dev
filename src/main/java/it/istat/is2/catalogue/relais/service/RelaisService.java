@@ -2577,7 +2577,6 @@ public class SNelem implements Comparable<SNelem> {
 	    System.out.println("residualB size "+ressize);
 		
 		//end elab
-
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 		rolesOut.keySet().forEach(code -> {
 			rolesGroupOut.put(code, code);
