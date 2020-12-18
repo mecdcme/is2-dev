@@ -24,8 +24,6 @@
 package it.istat.is2.catalogue.relais.service;
 
 import java.lang.reflect.Method;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,8 +43,8 @@ import it.istat.is2.app.service.LogService;
 import it.istat.is2.app.util.IS2Exception;
 import it.istat.is2.app.util.IS2ExceptionCodes;
 import it.istat.is2.app.util.Utility;
+import it.istat.is2.catalogue.relais.simhash.Simhash;
 import it.istat.is2.catalogue.relais.utility.RelaisUtility;
-import it.istat.is2.catalogue.relais.simhash.*;
 import it.istat.is2.workflow.engine.EngineService;
 
 /**
@@ -81,11 +79,11 @@ public class RelaisService {
 	final static String codeTHR = "THRESHOLD";
 	final static String codMatchingTableReduced = "MTR";
 	final static String codPossibleMatchingTableReduced = "PMR";
-	
+
 	final static String params_MatchingVariables = "MATCHING_VARIABLES";
 	final static String params_ThresholdMatching = "THRESHOLD_MATCHING";
 	final static String params_ThresholdUnMatching = "THRESHOLD_UNMATCHING";
-	final static String params_BlockingVariables = "BLOCKING"; 
+	final static String params_BlockingVariables = "BLOCKING";
 	final static String params_BlockingVariablesA = "BLOCKING A";
 	final static String params_BlockingVariablesB = "BLOCKING B";
 	final static String params_SortedNeghborhood = "SORTED NEIGHBORHOOD";
@@ -97,7 +95,7 @@ public class RelaisService {
 	final static String params_ShinglingB = "SHINGLING B";
 	final static String params_HDThr = "HDTHRESHOLD";
 	final static String params_Rotations = "ROTATIONS";
-	
+
 	final static String codeBlockingVariablesA = "BA";
 	final static String codeBlockingVariablesB = "BB";
 	final static String params_ReductionMethod = "REDUCTION_METHOD";
@@ -111,24 +109,22 @@ public class RelaisService {
 	@Autowired
 	private ContingencyService contingencyService;
 
-	@Autowired
-	private SparkService sparkService;
-
-	//used
-	public Map<?, ?> probabilisticContingencyTable(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
-												   Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
+	// used
+	public Map<?, ?> probabilisticContingencyTable(Long idelaborazione,
+			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
+			Map<String, String> parametriMap) throws Exception {
 
 		return callGenericMethod("pRLContingencyTable", idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
 
-	//not used?
+	// not used?
 	public Map<?, ?> deterministicRecordLinkage(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
-												Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
+			Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
 
 		return callGenericMethod("dRL", idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
 
-	//used
+	// used
 	private Map<?, ?> callGenericMethod(String prefixMethod, Long idelaborazione,
 			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
@@ -148,25 +144,15 @@ public class RelaisService {
 
 			parametriMap.put(keyStr, reductionJSONObject.get(keyStr).toString());
 		}
-		
+
+		if (method == null) throw new Exception("Relais.Service-method not found");
 		return (Map<?, ?>) method.invoke(this, idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
 
-	//not used
-	public Map<?, ?> pRLContingencyTableCartesianProductSpark(Long idelaborazione,
-			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
-			Map<String, String> parametriMap) throws Exception {
-
-		return sparkService.pRLContingencyTableCartesianProductSpark(idelaborazione, ruoliVariabileNome, worksetIn,
-				parametriMap);
-	}
-
-	//used
+	// used
 	public Map<?, ?> pRLContingencyTableCartesianProduct(Long idelaborazione,
 			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
-
-		Instant start = Instant.now();
 
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
@@ -200,7 +186,8 @@ public class RelaisService {
 		int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
+			contingencyService.init(parametriMap.get(params_MatchingVariables), worksetIn.get(codeMatchingA),
+					worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -215,27 +202,24 @@ public class RelaisService {
 		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
 
-		final Map<String, List<String>> coupledIndexByPattern = RelaisUtility.getEmptyMapByKey(
-				contingencyTable.keySet().stream(), PREFIX_PATTERN);
-	 
-	 		
+		final Map<String, List<String>> coupledIndexByPattern = RelaisUtility
+				.getEmptyMapByKey(contingencyTable.keySet().stream(), PREFIX_PATTERN);
+
 		final int CHUNK_SIZE = 8;
 
 		int partitionSize = (sizeA / CHUNK_SIZE) + ((sizeA % CHUNK_SIZE) == 0 ? 0 : 1);
 		ArrayList<String> notAv = new ArrayList<String>();
-	    notAv.add(NOT_AV);
+		notAv.add(NOT_AV);
 
 		IntStream.range(0, partitionSize).parallel().forEach(chunkIndex -> {
 
 			int inf = (chunkIndex * CHUNK_SIZE);
 			int sup = (chunkIndex == partitionSize - 1) ? sizeA - 1 : (inf + CHUNK_SIZE - 1);
-			
 
-			// final ContingencyService contingencyServicelocal=new ContingencyService();
-			// contingencyServicelocal.init(parametriMap.get(params_MatchingVariables));
 			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
-			final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
-			
+			final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility
+					.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
+
 			IntStream.rangeClosed(inf, sup).forEach(innerIA -> {
 
 				final Map<String, String> valuesI = new HashMap<>();
@@ -249,19 +233,17 @@ public class RelaisService {
 						valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(innerIB));
 					});
 
-				//	Instant start1 = Instant.now();
 					String pattern = contingencyService.getPattern(valuesI);
-				///	System.out.println(Duration.between(start1, Instant.now()).toNanos() + " " + valuesI); // in millis
 					int freq = contingencyTableIA.get(pattern);
-				    contingencyTableIA.put(pattern, freq + 1);
-						
+					contingencyTableIA.put(pattern, freq + 1);
+
 					if (freq < MAXINDEXNUM) {
-					    String phrase = (innerIA + 1) + ";" + (innerIB + 1);
-					    coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add(phrase);
+						String phrase = (innerIA + 1) + ";" + (innerIB + 1);
+						coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add(phrase);
 					} else {
-						//if (!(coupledIndexByPatternIA.containsKey(PREFIX_PATTERN + pattern)) || !( coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).get(0).equals(NOT_AV) )) 
-						    coupledIndexByPatternIA.put(PREFIX_PATTERN + pattern,notAv);
-						
+
+						coupledIndexByPatternIA.put(PREFIX_PATTERN + pattern, notAv);
+
 					}
 				});
 			});
@@ -270,24 +252,23 @@ public class RelaisService {
 				contingencyTableIA.entrySet().stream().forEach(e -> contingencyTable.put(e.getKey(),
 						contingencyTable.get(e.getKey()) + contingencyTableIA.get(e.getKey())));
 			}
-			
+
 			synchronized (coupledIndexByPattern) {
-			    //coupledIndexByPatternIA.entrySet().stream().forEach( e ->
-				contingencyTableIA.entrySet().stream().forEach(e -> 
-		          {
-		        	String pattern =e.getKey();
-		        	System.out.println("elab"+pattern);
-		        	if (contingencyTable.get(pattern) <= MAXINDEXNUM) 
-		                coupledIndexByPattern.get(PREFIX_PATTERN + pattern).addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
-		        	else 
-		        		coupledIndexByPattern.put(PREFIX_PATTERN + pattern,notAv);
-		          }
-			    );
-			 }
-			
+
+				contingencyTableIA.entrySet().stream().forEach(e -> {
+					String pattern = e.getKey();
+
+					if (contingencyTable.get(pattern) <= MAXINDEXNUM)
+						coupledIndexByPattern.get(PREFIX_PATTERN + pattern)
+								.addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
+					else
+						coupledIndexByPattern.put(PREFIX_PATTERN + pattern, notAv);
+				});
+			}
+
 		});
 		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
-		// write to worksetout
+
 		contingencyTable.forEach((key, value) -> {
 			int idx = 0;
 			for (String nameMatchingVariable : nameMatchingVariables) {
@@ -297,7 +278,7 @@ public class RelaisService {
 		});
 
 		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
-		
+
 		rolesOut.put(codContingencyIndexTable, new ArrayList<>(coupledIndexByPattern.keySet()));
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 
@@ -311,17 +292,13 @@ public class RelaisService {
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 
-		System.out.println("PC time:"+CHUNK_SIZE+"  "+ Duration.between(start, Instant.now()).toSeconds());
-
 		return returnOut;
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> pRLContingencyTableCartesianProduct_old(Long idelaborazione,
 			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
-
-		Instant start = Instant.now();
 
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
@@ -355,7 +332,8 @@ public class RelaisService {
 		int sizeB = worksetIn.get(codeMatchingB).get(firstFiledMB).size();
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
+			contingencyService.init(parametriMap.get(params_MatchingVariables), worksetIn.get(codeMatchingA),
+					worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -431,16 +409,13 @@ public class RelaisService {
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
 		worksetOut.put(codContingencyTable, contingencyTableOut);
-		// worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
-
-		System.out.println("PC time:" + Duration.between(start, Instant.now()).toSeconds());
 
 		return returnOut;
 	}
 
-	//used
+	// used
 	public Map<?, ?> pRLContingencyTableBlockingVariables(Long idelaborazione,
 			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
@@ -482,7 +457,8 @@ public class RelaisService {
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
+			contingencyService.init(parametriMap.get(params_MatchingVariables), worksetIn.get(codeMatchingA),
+					worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -509,17 +485,18 @@ public class RelaisService {
 		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
 
-		final Map<String, List<String>> coupledIndexByPattern =
-		   RelaisUtility.getEmptyMapByKey( contingencyTable.keySet().stream(), PREFIX_PATTERN);
+		final Map<String, List<String>> coupledIndexByPattern = RelaisUtility
+				.getEmptyMapByKey(contingencyTable.keySet().stream(), PREFIX_PATTERN);
 
 		ArrayList<String> notAv = new ArrayList<String>();
-	    notAv.add(NOT_AV);
-	    
+		notAv.add(NOT_AV);
+
 		indexesBlockingVariableA.entrySet().parallelStream().forEach(entry -> {
 			String keyBlock = entry.getKey();
 
 			final Map<String, Integer> contingencyTableIA = contingencyService.getEmptyContingencyTable();
-            final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
+			final Map<String, List<String>> coupledIndexByPatternIA = RelaisUtility
+					.getEmptyMapByKey(coupledIndexByPattern.keySet().stream(), "");
 
 			// Dataset A
 			entry.getValue().forEach(innerIA -> {
@@ -538,14 +515,15 @@ public class RelaisService {
 
 						String pattern = contingencyService.getPattern(valuesI);
 						int freq = contingencyTableIA.get(pattern);
-					    contingencyTableIA.put(pattern, freq + 1);
-							
-						if (freq < MAXINDEXNUM) 
-							coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern).add((innerIA + 1) + ";" + (innerIB + 1));
-						else
-							coupledIndexByPatternIA.put(PREFIX_PATTERN + pattern,notAv);
+						contingencyTableIA.put(pattern, freq + 1);
 
-				    });
+						if (freq < MAXINDEXNUM)
+							coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern)
+									.add((innerIA + 1) + ";" + (innerIB + 1));
+						else
+							coupledIndexByPatternIA.put(PREFIX_PATTERN + pattern, notAv);
+
+					});
 
 			});
 
@@ -555,18 +533,17 @@ public class RelaisService {
 			}
 
 			synchronized (coupledIndexByPattern) {
-			    //coupledIndexByPatternIA.entrySet().stream().forEach( e -> 
-				contingencyTableIA.entrySet().stream().forEach(e -> 
-			        {
-			        	String pattern =e.getKey();
-			        	if (contingencyTable.get(pattern) <= MAXINDEXNUM)
-			                coupledIndexByPattern.get(PREFIX_PATTERN + pattern).addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
-			        	else
-			        		coupledIndexByPattern.put(PREFIX_PATTERN + pattern,notAv);
-			        }
-			    ); 
+				// coupledIndexByPatternIA.entrySet().stream().forEach( e ->
+				contingencyTableIA.entrySet().stream().forEach(e -> {
+					String pattern = e.getKey();
+					if (contingencyTable.get(pattern) <= MAXINDEXNUM)
+						coupledIndexByPattern.get(PREFIX_PATTERN + pattern)
+								.addAll(coupledIndexByPatternIA.get(PREFIX_PATTERN + pattern));
+					else
+						coupledIndexByPattern.put(PREFIX_PATTERN + pattern, notAv);
+				});
 			}
-			 
+
 		});
 		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
 
@@ -597,7 +574,7 @@ public class RelaisService {
 		return returnOut;
 	}
 
-	//used?
+	// used?
 	public Map<?, ?> probabilisticResultTables(final Long idelaborazione,
 			final Map<String, ArrayList<String>> ruoliVariabileNome,
 			final Map<String, Map<String, List<String>>> worksetIn, final Map<String, String> parametriMap)
@@ -606,7 +583,7 @@ public class RelaisService {
 		return callGenericMethod("pRLResultTables", idelaborazione, ruoliVariabileNome, worksetIn, parametriMap);
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> pRLResultTablesBlockingVariables(final Long idelaborazione,
 			final Map<String, ArrayList<String>> ruoliVariabileNome,
 			final Map<String, Map<String, List<String>>> worksetInn, final Map<String, String> parametriMap)
@@ -733,7 +710,8 @@ public class RelaisService {
 		rolesOut.put(codResidualB, variabileNomeListMB);
 		rolesOut.put(codQualityIndicators, variableQuality);
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
+		contingencyService.init(parametriMap.get(params_MatchingVariables), worksetInn.get(codeMatchingA),
+				worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 			possibleMatchingTable.put(varname, new ArrayList<>());
@@ -832,19 +810,18 @@ public class RelaisService {
 		return returnOut;
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> pRLResultTablesCartesianProduct(final Long idelaborazione,
 			final Map<String, ArrayList<String>> ruoliVariabileNome,
 			final Map<String, Map<String, List<String>>> worksetInn, final Map<String, String> parametriMap)
 			throws Exception {
 
-		System.out.println("in pRLResultTablesCartesianProduct");
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> matchingTable = Collections.synchronizedMap(new LinkedHashMap<>());
 		final Map<String, ArrayList<String>> possibleMatchingTable = Collections.synchronizedMap(new LinkedHashMap<>());
-		//final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
-		//final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> qualityIndicators = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
@@ -952,7 +929,8 @@ public class RelaisService {
 		int sizeA = worksetInn.get(codeMatchingA).get(firstFiledMA).size();
 		int sizeB = worksetInn.get(codeMatchingB).get(firstFiledMB).size();
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
+		contingencyService.init(parametriMap.get(params_MatchingVariables), worksetInn.get(codeMatchingA),
+				worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 			possibleMatchingTable.put(varname, new ArrayList<>());
@@ -1019,26 +997,23 @@ public class RelaisService {
 		qualityIndicators.put(codeTHR, new ArrayList<>(List.of(paramTM, paramTU)));
 		qualityIndicators.put(codePREC, new ArrayList<>(List.of(String.valueOf(mprec), String.valueOf(pprec))));
 		qualityIndicators.put(codeREC, new ArrayList<>(List.of(String.valueOf(mrec), String.valueOf(prec))));
-		
+
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 		rolesOut.keySet().forEach(code -> {
 			rolesGroupOut.put(code, code);
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
-		//worksetOut.put(codResidualB, residualBTable);
-		//worksetOut.put(codResidualA, residualATable);
 		worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
 		worksetOut.put(codMatchingTable, matchingTable);
 		worksetOut.put(codQualityIndicators, qualityIndicators);
 
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
-		System.out.println("end pRLResultTablesCartesianProduct");
-		
+
 		return returnOut;
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> pRLResultTablesCartesianProduct_canc(final Long idelaborazione,
 			final Map<String, ArrayList<String>> ruoliVariabileNome,
 			final Map<String, Map<String, List<String>>> worksetInn, final Map<String, String> parametriMap)
@@ -1153,19 +1128,19 @@ public class RelaisService {
 		return returnOut;
 	}
 
-	//used
+	// used
 	public Map<?, ?> probabilisticResultTablesByIndex(Long idelaborazione,
 			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetInn,
 			Map<String, String> parametriMap) throws Exception {
 
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
-		//final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
-		//final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
 		final Map<String, ArrayList<String>> qualityIndicators = new LinkedHashMap<>();
-		int errorLevel=0; /* 0-> no_error  1 -> Error: Indexes not available */
+		int errorLevel = 0; /* 0-> no_error 1 -> Error: Indexes not available */
 
 		logService.save("Process Matching Tables  Starting...");
 
@@ -1182,7 +1157,7 @@ public class RelaisService {
 
 		logService.save("Threshold Matching: " + paramTM);
 		logService.save("Threshold UnMatching: " + paramTU);
-		
+
 		float mprec = 1f, pprec = 1f, mrec = 0f, prec = 0f;
 
 		// select pattern by P_POST value
@@ -1192,10 +1167,10 @@ public class RelaisService {
 				indexItems = 0;
 
 				for (String pPostValue : worksetInn.get(codeFS).get(pPostVarname)) {
-					
+
 					if (Float.parseFloat(pPostValue) >= Float.parseFloat(paramTU)) {
 						StringBuffer pattern = new StringBuffer();
-						
+
 						float cprec = Float.parseFloat(worksetInn.get(codeFS).get(codePREC).get(indexItems));
 						float crec = Float.parseFloat(worksetInn.get(codeFS).get(codeREC).get(indexItems));
 
@@ -1206,32 +1181,34 @@ public class RelaisService {
 								pattern.append(Double.valueOf(p).intValue());
 							}
 						}
-						
-						if (worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).get(0).equals(NOT_AV)) {
-							logService.save("ERROR: The number of pairs with '"+pattern+"' pattern is too large to enter into a solution");
-							errorLevel=1;
+
+						if (worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern).get(0)
+								.equals(NOT_AV)) {
+							logService.save("ERROR: The number of pairs with '" + pattern
+									+ "' pattern is too large to enter into a solution");
+							errorLevel = 1;
 						} else {
-							
-						 if (Float.parseFloat(pPostValue) >= Float.parseFloat(paramTM)) {
+
+							if (Float.parseFloat(pPostValue) >= Float.parseFloat(paramTM)) {
 								patternMatching.add(pattern.toString());
-							if (cprec < mprec)
-								mprec = cprec;
-							if (cprec < pprec)
-								pprec = cprec;
-							if (crec > mrec)
-								mrec = crec;
-							if (crec > prec)
-								prec = crec;
-						 } else {
-							patternPossibleMatching.add(pattern.toString());
-							if (cprec < pprec)
-								pprec = cprec;
-							if (crec > prec)
-								prec = crec;
-						 }
-						
-						 patternPPostValues.put(pattern.toString(), pPostValue);
-						 patternRValues.put(pattern.toString(), RValue);
+								if (cprec < mprec)
+									mprec = cprec;
+								if (cprec < pprec)
+									pprec = cprec;
+								if (crec > mrec)
+									mrec = crec;
+								if (crec > prec)
+									prec = crec;
+							} else {
+								patternPossibleMatching.add(pattern.toString());
+								if (cprec < pprec)
+									pprec = cprec;
+								if (crec > prec)
+									prec = crec;
+							}
+
+							patternPPostValues.put(pattern.toString(), pPostValue);
+							patternRValues.put(pattern.toString(), RValue);
 						}
 					}
 					indexItems++;
@@ -1262,7 +1239,7 @@ public class RelaisService {
 		variabileNomeListOut.addAll(variabileNomeListMB);
 		variabileNomeListOut.add(codeP_POST);
 		variabileNomeListOut.add(codeRATIO);
-		
+
 		final ArrayList<String> variableQuality = new ArrayList<>();
 		variableQuality.add(codeOUT);
 		variableQuality.add(codeTHR);
@@ -1289,7 +1266,7 @@ public class RelaisService {
 			rolesGroupOut.put(code, code);
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
-		
+
 		/* load quality indicators */
 		logService.save("Quality Indicators (" + codQualityIndicators + ") :" + String.valueOf(mprec) + " "
 				+ String.valueOf(mrec));
@@ -1298,35 +1275,36 @@ public class RelaisService {
 		qualityIndicators.put(codeTHR, new ArrayList<>(List.of(paramTM, paramTU)));
 		qualityIndicators.put(codePREC, new ArrayList<>(List.of(String.valueOf(mprec), String.valueOf(pprec))));
 		qualityIndicators.put(codeREC, new ArrayList<>(List.of(String.valueOf(mrec), String.valueOf(prec))));
-		
-		//worksetOut.put(codResidualB, residualBTable);
-		//worksetOut.put(codResidualA, residualATable);
-		if (errorLevel==0) {
+
+		// worksetOut.put(codResidualB, residualBTable);
+		// worksetOut.put(codResidualA, residualATable);
+		if (errorLevel == 0) {
 			worksetOut.put(codPossibleMatchingTable, possibleMatchingTable);
 			worksetOut.put(codMatchingTable, matchingTable);
 			worksetOut.put(codQualityIndicators, qualityIndicators);
 		}
-		if (errorLevel==1) logService.save("ERROR: The outputs were not produced. The number of pairs is too large into a solution");
-		
+		if (errorLevel == 1)
+			logService.save("ERROR: The outputs were not produced. The number of pairs is too large into a solution");
+
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 	}
 
-	//used
+	// used
 	public Map<?, ?> deterministicResultTablesByIndex(Long idelaborazione,
 			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetInn,
 			Map<String, String> parametriMap) throws Exception {
 
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
-		//final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
-		//final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualATable = new LinkedHashMap<>();
+		// final Map<String, ArrayList<String>> residualBTable = new LinkedHashMap<>();
 		final Map<String, ArrayList<String>> rolesOut = new LinkedHashMap<>();
 		final Map<String, String> rolesGroupOut = new HashMap<>();
-		int errorLevel=0; /* 0 -> no_error  1 -> Error: indexes not available */
+		int errorLevel = 0; /* 0 -> no_error 1 -> Error: indexes not available */
 
 		logService.save("Process Matching Tables  Starting...");
-		
+
 		ArrayList<String> variabileNomeListMA = new ArrayList<>();
 		ArrayList<String> variabileNomeListMB = new ArrayList<>();
 		ArrayList<String> variabileNomeListOut = new ArrayList<>();
@@ -1345,7 +1323,7 @@ public class RelaisService {
 
 		variabileNomeListOut.addAll(variabileNomeListMA);
 		variabileNomeListOut.addAll(variabileNomeListMB);
-		
+
 		rolesOut.put(codMatchingTable, variabileNomeListOut);
 
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
@@ -1353,7 +1331,7 @@ public class RelaisService {
 			rolesGroupOut.put(code, code);
 		});
 		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
-		
+
 		final Map<String, ArrayList<String>> resultMatchTable = Collections.synchronizedMap(new LinkedHashMap<>());
 
 		variabileNomeListOut.forEach(varname -> {
@@ -1364,23 +1342,22 @@ public class RelaisService {
 
 		// final Map<String, List<String>>
 		// coupledIndexByPattern=worksetIn.get(codContengencyIndexTable );
-		int nVarM = worksetInn.get(codContingencyTable).size()-1;
+		int nVarM = worksetInn.get(codContingencyTable).size() - 1;
 		String pattern1 = new String("1").repeat(nVarM);
-		System.out.println("n:"+nVarM+" str:"+pattern1);
 
 		ArrayList<String> patternList = new ArrayList<String>();
 		patternList.add(pattern1);
-		
+
 		logService.save("Patterns of Matches " + patternList);
-		for (int i=0; i<patternList.size();i++) {
-            String pattern = patternList.get(i);
-			int sizeList = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).size();
-			if (sizeList ==1) {
-				if (worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).get(0).equals(NOT_AV)) {
-					errorLevel=1;
+		for (int i = 0; i < patternList.size(); i++) {
+			String pattern = patternList.get(i);
+			int sizeList = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern).size();
+			if (sizeList == 1) {
+				if (worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern).get(0).equals(NOT_AV)) {
+					errorLevel = 1;
 					continue;
 				}
-				
+
 			}
 			int partitionSize = (sizeList / CHUNK_SIZE) + ((sizeList % CHUNK_SIZE) == 0 ? 0 : 1);
 
@@ -1396,8 +1373,8 @@ public class RelaisService {
 
 				IntStream.rangeClosed(inf, sup).forEach(innerIndex -> {
 
-					String[] indexesArr = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).get(innerIndex)
-							.split(INDEX_SEPARATOR);
+					String[] indexesArr = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern)
+							.get(innerIndex).split(INDEX_SEPARATOR);
 					int innerIA = Integer.parseInt(indexesArr[0]);
 					int innerIB = Integer.parseInt(indexesArr[1]);
 
@@ -1429,19 +1406,18 @@ public class RelaisService {
 				}
 			});
 		}
-		
-		if (errorLevel==0) {
+
+		if (errorLevel == 0) {
 			worksetOut.put(codMatchingTable, resultMatchTable);
 		}
-		if (errorLevel==1) logService.save("ERROR: The outputs were not produced. The number of pairs is too large into a solution");
-		
-		
-		
+		if (errorLevel == 1)
+			logService.save("ERROR: The outputs were not produced. The number of pairs is too large into a solution");
+
 		returnOut.put(EngineService.WORKSET_OUT, worksetOut);
 		return returnOut;
 	}
-	
-	//used in probabilisticResultTablesByIndex
+
+	// used in probabilisticResultTablesByIndex
 	private Map<String, ArrayList<String>> elaborateResultTable(Map<String, Map<String, List<String>>> worksetInn,
 			ArrayList<String> variabileNomeListMA, ArrayList<String> variabileNomeListMB,
 			ArrayList<String> variabileNomeListOut, ArrayList<String> patternList,
@@ -1460,7 +1436,7 @@ public class RelaisService {
 
 		patternList.forEach(pattern -> {
 
-			int sizeList = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).size();
+			int sizeList = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern).size();
 			int partitionSize = (sizeList / CHUNK_SIZE) + ((sizeList % CHUNK_SIZE) == 0 ? 0 : 1);
 
 			IntStream.range(0, partitionSize).parallel().forEach(chunkIndex -> {
@@ -1475,8 +1451,8 @@ public class RelaisService {
 
 				IntStream.rangeClosed(inf, sup).forEach(innerIndex -> {
 
-					String[] indexesArr = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN+pattern).get(innerIndex)
-							.split(INDEX_SEPARATOR);
+					String[] indexesArr = worksetInn.get(codContingencyIndexTable).get(PREFIX_PATTERN + pattern)
+							.get(innerIndex).split(INDEX_SEPARATOR);
 					int innerIA = Integer.parseInt(indexesArr[0]);
 					int innerIB = Integer.parseInt(indexesArr[1]);
 
@@ -1514,7 +1490,7 @@ public class RelaisService {
 		return resultMatchTable;
 	}
 
-	//not used?
+	// not used?
 	public Map<String, ArrayList<String>> elaborateResultTableByCIT(Map<String, Map<String, List<String>>> worksetInn,
 			ArrayList<String> variabileNomeListMA, ArrayList<String> variabileNomeListMB,
 			ArrayList<String> variabileNomeListOut, ArrayList<String> patternList,
@@ -1587,7 +1563,7 @@ public class RelaisService {
 		return resultMatchTable;
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> dRLCartesianProduct(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
 			Map<String, Map<String, List<String>>> worksetInn, Map<String, String> parametriMap) throws Exception {
 
@@ -1624,7 +1600,8 @@ public class RelaisService {
 		int sizeA = worksetInn.get(codeMatchingA).get(firstFiledMA).size();
 		int sizeB = worksetInn.get(codeMatchingB).get(firstFiledMB).size();
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
+		contingencyService.init(parametriMap.get(params_MatchingVariables), worksetInn.get(codeMatchingA),
+				worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 
@@ -1677,7 +1654,7 @@ public class RelaisService {
 
 	}
 
-	//not used
+	// not used
 	public Map<?, ?> dRLBlockingVariables(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
 			Map<String, Map<String, List<String>>> worksetInn, Map<String, String> parametriMap) throws Exception {
 
@@ -1708,13 +1685,6 @@ public class RelaisService {
 		blockingVariablesA.addAll(
 				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesA));
 
-		// ruoliVariabileNome.get(codeBlockingVariablesA).forEach((varname) -> {
-		// blockingVariablesA.add(varname);
-		// });
-
-		// ruoliVariabileNome.get(codeBlockingVariablesB).forEach((varname) -> {
-		// blockingVariablesB.add(varname);
-		// });
 		blockingVariablesB.addAll(
 				RelaisUtility.getFieldsInParams(parametriMap.get(params_BlockingVariables), params_BlockingVariablesB));
 
@@ -1728,7 +1698,8 @@ public class RelaisService {
 
 		rolesOut.put(codMatchingTable, variabileNomeListOut);
 
-		contingencyService.init(parametriMap.get(params_MatchingVariables),worksetInn.get(codeMatchingA),worksetInn.get(codeMatchingB));
+		contingencyService.init(parametriMap.get(params_MatchingVariables), worksetInn.get(codeMatchingA),
+				worksetInn.get(codeMatchingB));
 		variabileNomeListOut.forEach(varname -> {
 			matchingTable.put(varname, new ArrayList<>());
 
@@ -1796,7 +1767,7 @@ public class RelaisService {
 		return returnOut;
 	}
 
-	//used
+	// used
 	private void checkThresholds(String paramTM, String paramTU) throws Exception {
 		try {
 			if (Float.parseFloat(paramTU) > Float.parseFloat(paramTM)) {
@@ -1807,35 +1778,34 @@ public class RelaisService {
 		}
 
 	}
-	
-	//used in reducedResultTablesGreedy
-public class ReducElem implements Comparable<ReducElem> {
-		
+
+	// used in reducedResultTablesGreedy
+	public class ReducElem implements Comparable<ReducElem> {
+
 		public int dataset;
 		public int nrow;
 		public float sortingKey;
-		
+
 		public ReducElem(int dataset, int nrow, float sortingKey) {
-			this.dataset=dataset;
-			this.nrow=nrow;
-			this.sortingKey=sortingKey;
+			this.dataset = dataset;
+			this.nrow = nrow;
+			this.sortingKey = sortingKey;
 		}
-		
-		public int compareTo(ReducElem o) {            
-            if (this.sortingKey > o.sortingKey) {
-            	return 1;
-            }
-            if (this.sortingKey < o.sortingKey) {
-            	return -1;
-            }
-            return 0;
-        }
+
+		public int compareTo(ReducElem o) {
+			if (this.sortingKey > o.sortingKey) {
+				return 1;
+			}
+			if (this.sortingKey < o.sortingKey) {
+				return -1;
+			}
+			return 0;
+		}
 	}
-	
-    //used
-	public Map<?, ?> reducedResultTablesGreedy(Long idelaborazione,
-			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetInn,
-			Map<String, String> parametriMap) throws Exception {
+
+	// used
+	public Map<?, ?> reducedResultTablesGreedy(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
+			Map<String, Map<String, List<String>>> worksetInn, Map<String, String> parametriMap) throws Exception {
 
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
@@ -1857,9 +1827,6 @@ public class ReducElem implements Comparable<ReducElem> {
 			variabileNomeListMB.add(varname);
 		});
 
-		//logService.save("Variables dataset A: " + variabileNomeListMA);
-		//logService.save("Variables dataset B: " + variabileNomeListMB);
-
 		variabileNomeListOut.addAll(variabileNomeListMA);
 		variabileNomeListOut.addAll(variabileNomeListMB);
 		variabileNomeListOut.add(codeP_POST);
@@ -1867,9 +1834,7 @@ public class ReducElem implements Comparable<ReducElem> {
 
 		rolesOut.put(codMatchingTableReduced, variabileNomeListOut);
 		rolesOut.put(codPossibleMatchingTableReduced, variabileNomeListOut);
-		
-		// start elab
-		
+
 		final Map<String, ArrayList<String>> matchingTableReduced = Collections.synchronizedMap(new LinkedHashMap<>());
 		final Map<String, ArrayList<String>> possibleTableReduced = Collections.synchronizedMap(new LinkedHashMap<>());
 
@@ -1878,74 +1843,73 @@ public class ReducElem implements Comparable<ReducElem> {
 			possibleTableReduced.put(varname, new ArrayList<>());
 		});
 
-		Map<String,String> KeyA= new HashMap<>();
-		Map<String,String> KeyB= new HashMap<String,String>();
-		
+		Map<String, String> KeyA = new HashMap<>();
+		Map<String, String> KeyB = new HashMap<String, String>();
+
 		Map<String, List<String>> matches = worksetInn.get(codMatchingTable);
 
 		int size = matches.get(ROW_IA).size();
 
 		ArrayList<ReducElem> sortlist = new ArrayList<ReducElem>();
-		for (int innerIndex = 0; innerIndex < size; innerIndex++){
+		for (int innerIndex = 0; innerIndex < size; innerIndex++) {
 			float ppost = Float.parseFloat(matches.get(codeP_POST).get(innerIndex));
-			sortlist.add(new ReducElem(1,innerIndex,ppost));
+			sortlist.add(new ReducElem(1, innerIndex, ppost));
 		}
-	    Collections.sort(sortlist);
-	    int reducsize=0;
+		Collections.sort(sortlist);
+		int reducsize = 0;
 		/* IntStream.rangeClosed(0, size).forEach(innerIndex -> */
-		for (ReducElem curr:sortlist){
-			    
-			    if ((! KeyA.containsKey(matches.get(ROW_IA).get(curr.nrow))) && 
-			    	(! KeyB.containsKey(matches.get(ROW_IB).get(curr.nrow)))) {
-		
-			    	reducsize++;
-			    	/*variabileNomeListOut.forEach(varname ->*/
-			    	for (String varname:variabileNomeListOut) {
-			    		matchingTableReduced.get(varname).add(matches.get(varname).get(curr.nrow));
-				    }
-			    	
-			    	KeyA.put(matches.get(ROW_IA).get(curr.nrow),matches.get(ROW_IB).get(curr.nrow));
-			    	KeyB.put(matches.get(ROW_IB).get(curr.nrow),matches.get(ROW_IA).get(curr.nrow));
-			    }
+		for (ReducElem curr : sortlist) {
+
+			if ((!KeyA.containsKey(matches.get(ROW_IA).get(curr.nrow)))
+					&& (!KeyB.containsKey(matches.get(ROW_IB).get(curr.nrow)))) {
+
+				reducsize++;
+				/* variabileNomeListOut.forEach(varname -> */
+				for (String varname : variabileNomeListOut) {
+					matchingTableReduced.get(varname).add(matches.get(varname).get(curr.nrow));
+				}
+
+				KeyA.put(matches.get(ROW_IA).get(curr.nrow), matches.get(ROW_IB).get(curr.nrow));
+				KeyB.put(matches.get(ROW_IB).get(curr.nrow), matches.get(ROW_IA).get(curr.nrow));
+			}
 
 		}
-		
-		logService.save("Match pairs are reduced from " + size + " to "+ reducsize);
-		
+
+		logService.save("Match pairs are reduced from " + size + " to " + reducsize);
+
 		Map<String, List<String>> pmatches = worksetInn.get(codPossibleMatchingTable);
 
 		size = pmatches.get(ROW_IA).size();
-		
+
 		sortlist = new ArrayList<ReducElem>();
-		for (int innerIndex = 0; innerIndex < size; innerIndex++){
+		for (int innerIndex = 0; innerIndex < size; innerIndex++) {
 			float ppost = Float.parseFloat(pmatches.get(codeP_POST).get(innerIndex));
-			sortlist.add(new ReducElem(2,innerIndex,ppost));
+			sortlist.add(new ReducElem(2, innerIndex, ppost));
 		}
-	    Collections.sort(sortlist);
-	    
-	    reducsize=0;
-		/*IntStream.rangeClosed(0, size).forEach(innerIndex ->*/ 
-	    for (ReducElem curr:sortlist){
-			
-			    if ((! KeyA.containsKey(pmatches.get(ROW_IA).get(curr.nrow))) && 
-			    	(! KeyB.containsKey(pmatches.get(ROW_IB).get(curr.nrow)))) {
-		
-			    	reducsize++;
-			    	/*variabileNomeListOut.forEach(varname ->*/ 
-			    	for (String varname : variabileNomeListOut) {
-			    		possibleTableReduced.get(varname).add(pmatches.get(varname).get(curr.nrow));
-				    }
-			    	
-			    	KeyA.put(pmatches.get(ROW_IA).get(curr.nrow),pmatches.get(ROW_IB).get(curr.nrow));
-			    	KeyB.put(pmatches.get(ROW_IB).get(curr.nrow),pmatches.get(ROW_IA).get(curr.nrow));
-			    }
+		Collections.sort(sortlist);
+
+		reducsize = 0;
+		/* IntStream.rangeClosed(0, size).forEach(innerIndex -> */
+		for (ReducElem curr : sortlist) {
+
+			if ((!KeyA.containsKey(pmatches.get(ROW_IA).get(curr.nrow)))
+					&& (!KeyB.containsKey(pmatches.get(ROW_IB).get(curr.nrow)))) {
+
+				reducsize++;
+				/* variabileNomeListOut.forEach(varname -> */
+				for (String varname : variabileNomeListOut) {
+					possibleTableReduced.get(varname).add(pmatches.get(varname).get(curr.nrow));
+				}
+
+				KeyA.put(pmatches.get(ROW_IA).get(curr.nrow), pmatches.get(ROW_IB).get(curr.nrow));
+				KeyB.put(pmatches.get(ROW_IB).get(curr.nrow), pmatches.get(ROW_IA).get(curr.nrow));
+			}
 
 		}
-	    
-	    logService.save("Possiblematch pairs are reduced from " + size + " to "+ reducsize);
 
-		
-		//end elab
+		logService.save("Possiblematch pairs are reduced from " + size + " to " + reducsize);
+
+		// end elab
 
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 		rolesOut.keySet().forEach(code -> {
@@ -1959,25 +1923,25 @@ public class ReducElem implements Comparable<ReducElem> {
 		return returnOut;
 	}
 
-	//used in pRLContingencyTableSortedNeighborhood
-public class SNelem implements Comparable<SNelem> {
-		
+	// used in pRLContingencyTableSortedNeighborhood
+	public class SNelem implements Comparable<SNelem> {
+
 		public int dataset;
 		public int nrow;
 		public String sortingKey;
-		
+
 		public SNelem(int dataset, int nrow, String sortingKey) {
-			this.dataset=dataset;
-			this.nrow=nrow;
-			this.sortingKey=sortingKey;
+			this.dataset = dataset;
+			this.nrow = nrow;
+			this.sortingKey = sortingKey;
 		}
-		
-		public int compareTo(SNelem o) {            
-            return this.sortingKey.compareTo(o.sortingKey);
-        }
+
+		public int compareTo(SNelem o) {
+			return this.sortingKey.compareTo(o.sortingKey);
+		}
 	}
-	
-	//used
+
+	// used
 	public Map<?, ?> pRLContingencyTableSortedNeighborhood(Long idelaborazione,
 			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
 			Map<String, String> parametriMap) throws Exception {
@@ -1997,31 +1961,24 @@ public class SNelem implements Comparable<SNelem> {
 		final int window;
 
 		final ArrayList<String> variabileNomeListOut = new ArrayList<>();
-		/*log*/System.out.println("dentro pRLContingencyTableSortedNeighborhood");
-		
+
 		logService.save("Process Contingency Table Sorted Neighborhood Starting...");
 		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
 			variabileNomeListMA.add(varname);
 		});
-		//logService.save("Matching variables dataset A: " + variabileNomeListMA);
+		// logService.save("Matching variables dataset A: " + variabileNomeListMA);
 		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
 			variabileNomeListMB.add(varname);
 		});
-		//logService.save("Matching variables dataset B: " + variabileNomeListMB);
+		// logService.save("Matching variables dataset B: " + variabileNomeListMB);
 
 		sortingVariablesA.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood ), params_SortingVariablesA ));
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood), params_SortingVariablesA));
 		sortingVariablesB.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood ), params_SortingVariablesB ));
+				RelaisUtility.getFieldsInParams(parametriMap.get(params_SortedNeghborhood), params_SortingVariablesB));
 
-		window = RelaisUtility.getIntField(parametriMap.get(params_SortedNeghborhood ), param_WindowSize);
-        /*log System.out.println("letti parametri SNM");*/
-        
-	/*	sortingVariablesA.add("DS1_SURNAME");
-		sortingVariablesB.add("DS2_SURNAME");
-		window=100; */
-        
-        
+		window = RelaisUtility.getIntField(parametriMap.get(params_SortedNeghborhood), param_WindowSize);
+
 		logService.save("Sorting variables dataset A: " + sortingVariablesA);
 		logService.save("Sorting variables dataset B: " + sortingVariablesB);
 		logService.save("Window size: " + window);
@@ -2031,7 +1988,8 @@ public class SNelem implements Comparable<SNelem> {
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
+			contingencyService.init(parametriMap.get(params_MatchingVariables), worksetIn.get(codeMatchingA),
+					worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -2048,92 +2006,87 @@ public class SNelem implements Comparable<SNelem> {
 			throw new Exception("Error parsing SORTING VARAIABLES");
 		}
 
-		
-
 		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
-		
-		final Map<String, List<String>> coupledIndexByPattern =
-				   RelaisUtility.getEmptyMapByKey( contingencyTable.keySet().stream(), PREFIX_PATTERN);
 
+		final Map<String, List<String>> coupledIndexByPattern = RelaisUtility
+				.getEmptyMapByKey(contingencyTable.keySet().stream(), PREFIX_PATTERN);
 
-		int dimA =worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).size();
-		int dimB =worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).size();
-		int nVarSort=sortingVariablesA.size();
+		int dimA = worksetIn.get(codeMatchingA).get(sortingVariablesA.get(0)).size();
+		int dimB = worksetIn.get(codeMatchingB).get(sortingVariablesB.get(0)).size();
+		int nVarSort = sortingVariablesA.size();
 		List<Integer[]> listPairs = new ArrayList<>();
-		
+
 		ArrayList<SNelem> sortlist = new ArrayList<SNelem>();
-		for (int index=0; index < dimA;index++ ) {
+		for (int index = 0; index < dimA; index++) {
 			String sortKey;
 			sortKey = new String("");
-			for (int numv=0; numv<nVarSort; numv++) {
-				sortKey=sortKey.concat(worksetIn.get(codeMatchingA).get(sortingVariablesA.get(numv)).get(index));
+			for (int numv = 0; numv < nVarSort; numv++) {
+				sortKey = sortKey.concat(worksetIn.get(codeMatchingA).get(sortingVariablesA.get(numv)).get(index));
 			}
 			sortlist.add(new SNelem(0, index, sortKey));
 		}
-		for (int index=0; index < dimB;index++ ) {
+		for (int index = 0; index < dimB; index++) {
 			String sortKey;
 			sortKey = new String("");
-			for (int numv=0; numv<nVarSort; numv++) {
-				sortKey=sortKey.concat(worksetIn.get(codeMatchingB).get(sortingVariablesB.get(numv)).get(index));
+			for (int numv = 0; numv < nVarSort; numv++) {
+				sortKey = sortKey.concat(worksetIn.get(codeMatchingB).get(sortingVariablesB.get(numv)).get(index));
 			}
 			sortlist.add(new SNelem(1, index, sortKey));
 		}
-		
+
 		Collections.sort(sortlist);
 		Integer[] pair;
 		ArrayList<String> notAv = new ArrayList<String>();
-	    notAv.add(NOT_AV);
-		
-		for (int index=0; index < (dimA+dimB);index++ ) {
-			for (int adding=1;adding<window && (adding+index)<(dimA+dimB);adding++) {
-				int index2 = index+adding;
-				
-				if (sortlist.get(index2).dataset>sortlist.get(index).dataset) {
+		notAv.add(NOT_AV);
+
+		for (int index = 0; index < (dimA + dimB); index++) {
+			for (int adding = 1; adding < window && (adding + index) < (dimA + dimB); adding++) {
+				int index2 = index + adding;
+
+				if (sortlist.get(index2).dataset > sortlist.get(index).dataset) {
 					pair = new Integer[2];
-					pair[0]=sortlist.get(index).nrow;
-                    pair[1]=sortlist.get(index2).nrow;
+					pair[0] = sortlist.get(index).nrow;
+					pair[1] = sortlist.get(index2).nrow;
 					listPairs.add(pair);
 
 				}
-				if (sortlist.get(index2).dataset<sortlist.get(index).dataset) {
+				if (sortlist.get(index2).dataset < sortlist.get(index).dataset) {
 					pair = new Integer[2];
-					pair[0]=sortlist.get(index2).nrow;
-                    pair[1]=sortlist.get(index).nrow;
+					pair[0] = sortlist.get(index2).nrow;
+					pair[1] = sortlist.get(index).nrow;
 					listPairs.add(pair);
 
 				}
 			}
 		}
-		
-		System.out.println(" coppie = "+listPairs.size());
+
 		int freq;
 
 		// contingency evaluation
 		for (Integer[] curr : listPairs) {
 
-				final Map<String, String> valuesI = new HashMap<>();
-				
-				variabileNomeListMA.forEach(varnameMA -> {
-					valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(curr[0]));
-				});
-				variabileNomeListMB.forEach(varnameMB -> {
-					valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(curr[1]));
-				});
+			final Map<String, String> valuesI = new HashMap<>();
 
-				String pattern = contingencyService.getPattern(valuesI);
-				freq = contingencyTable.get(pattern);
-			    contingencyTable.put(pattern, freq + 1);
-					
-				if (freq < MAXINDEXNUM) 
-					coupledIndexByPattern.get(PREFIX_PATTERN + pattern).add((curr[0] + 1) + ";" + (curr[1] + 1));
-				else 
-					coupledIndexByPattern.put(PREFIX_PATTERN + pattern,notAv);
+			variabileNomeListMA.forEach(varnameMA -> {
+				valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(curr[0]));
+			});
+			variabileNomeListMB.forEach(varnameMB -> {
+				valuesI.put(varnameMB, worksetIn.get(codeMatchingB).get(varnameMB).get(curr[1]));
+			});
 
+			String pattern = contingencyService.getPattern(valuesI);
+			freq = contingencyTable.get(pattern);
+			contingencyTable.put(pattern, freq + 1);
 
-		};
+			if (freq < MAXINDEXNUM)
+				coupledIndexByPattern.get(PREFIX_PATTERN + pattern).add((curr[0] + 1) + ";" + (curr[1] + 1));
+			else
+				coupledIndexByPattern.put(PREFIX_PATTERN + pattern, notAv);
 
-		
+		}
+		;
+
 		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
 		logService.save("Matching variables: " + nameMatchingVariables);
 
@@ -2163,11 +2116,10 @@ public class SNelem implements Comparable<SNelem> {
 		logService.save("Process Contingency Table End");
 		return returnOut;
 	}
-	
-	//used
-	public Map<?, ?> pRLContingencyTableSimHash(Long idelaborazione,
-			Map<String, List<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
-			Map<String, String> parametriMap) throws Exception {
+
+	// used
+	public Map<?, ?> pRLContingencyTableSimHash(Long idelaborazione, Map<String, List<String>> ruoliVariabileNome,
+			Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
 		final Map<String, Map<?, ?>> returnOut = new HashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new HashMap<>();
 		final Map<String, ArrayList<String>> contingencyTableOut = new LinkedHashMap<>();
@@ -2180,11 +2132,10 @@ public class SNelem implements Comparable<SNelem> {
 		final ArrayList<String> variabileNomeListMB = new ArrayList<>();
 		final List<String> hashVariablesA = new ArrayList<>();
 		final List<String> hashVariablesB = new ArrayList<>();
-		final int hdThr,rotations;
+		final int hdThr, rotations;
 
 		final ArrayList<String> variabileNomeListOut = new ArrayList<>();
-		/*log*/System.out.println("dentro pRLContingencyTableSimHash");
-		
+
 		logService.save("Process Contingency Table reduced by SimHash Method Starting...");
 		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
 			variabileNomeListMA.add(varname);
@@ -2195,30 +2146,29 @@ public class SNelem implements Comparable<SNelem> {
 		});
 		logService.save("Variables dataset B: " + variabileNomeListMB);
 
-		hashVariablesA.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_simhash ), params_ShinglingA ));
-		hashVariablesB.addAll(
-				RelaisUtility.getFieldsInParams(parametriMap.get(params_simhash ), params_ShinglingB ));
-		String sAppo = RelaisUtility.getStringField(parametriMap.get(params_simhash ), params_HDThr);
+		hashVariablesA.addAll(RelaisUtility.getFieldsInParams(parametriMap.get(params_simhash), params_ShinglingA));
+		hashVariablesB.addAll(RelaisUtility.getFieldsInParams(parametriMap.get(params_simhash), params_ShinglingB));
+		String sAppo = RelaisUtility.getStringField(parametriMap.get(params_simhash), params_HDThr);
 		hdThr = Integer.parseInt(sAppo);
-		sAppo = RelaisUtility.getStringField(parametriMap.get(params_simhash ), params_Rotations);
+		sAppo = RelaisUtility.getStringField(parametriMap.get(params_simhash), params_Rotations);
 		rotations = Integer.parseInt(sAppo.trim());
-        
+
 		logService.save("Shingling variables dataset A: " + hashVariablesA);
 		logService.save("Shingling variables dataset B: " + hashVariablesB);
-		logService.save("SimHash parameters [HD threshold:" + hdThr+" Rotations:"+rotations+"]");
-		int gramdim=3;
-		int hashdim=128;
-		boolean weights=false;
-		boolean dedup=false;
-		int gradino=hashdim/rotations;
+		logService.save("SimHash parameters [HD threshold:" + hdThr + " Rotations:" + rotations + "]");
+		int gramdim = 3;
+		int hashdim = 128;
+		boolean weights = false;
+		boolean dedup = false;
+		int gradino = hashdim / rotations;
 
 		ruoliVariabileNome.values().forEach((list) -> {
 			variabileNomeListOut.addAll(list);
 		});
 
 		try {
-			contingencyService.init(parametriMap.get(params_MatchingVariables),worksetIn.get(codeMatchingA),worksetIn.get(codeMatchingB));
+			contingencyService.init(parametriMap.get(params_MatchingVariables), worksetIn.get(codeMatchingA),
+					worksetIn.get(codeMatchingB));
 		} catch (Exception e) {
 			logService.save("Error parsing " + params_MatchingVariables);
 			throw new Exception("Error parsing " + params_MatchingVariables);
@@ -2235,206 +2185,189 @@ public class SNelem implements Comparable<SNelem> {
 			throw new Exception("Error parsing Shingling VARAIABLES");
 		}
 
-		
-
 		final Map<String, Integer> contingencyTable = Collections
 				.synchronizedMap(contingencyService.getEmptyContingencyTable());
-		
-		final Map<String, List<String>> coupledIndexByPattern =
-				   RelaisUtility.getEmptyMapByKey( contingencyTable.keySet().stream(), PREFIX_PATTERN);
 
+		final Map<String, List<String>> coupledIndexByPattern = RelaisUtility
+				.getEmptyMapByKey(contingencyTable.keySet().stream(), PREFIX_PATTERN);
 
-		final int dimA =worksetIn.get(codeMatchingA).get(hashVariablesA.get(0)).size();
-		
+		final int dimA = worksetIn.get(codeMatchingA).get(hashVariablesA.get(0)).size();
+
 		int dim2 = 0;
 		if (!dedup) {
-			 dim2 =worksetIn.get(codeMatchingB).get(hashVariablesB.get(0)).size();
-		} 
-		
-		final int dimB=dim2;
-		final int totRec=dimA+dimB;
-		
-		int nVarSort=hashVariablesA.size();
-		
+			dim2 = worksetIn.get(codeMatchingB).get(hashVariablesB.get(0)).size();
+		}
+
+		final int dimB = dim2;
+		final int totRec = dimA + dimB;
+
+		int nVarSort = hashVariablesA.size();
+
 		List<Integer[]> listPairs = new ArrayList<>();
-		
-		
-		/*HashMap wgrams = new HashMap();
-		HashMap wgramsi = new HashMap();
-		if (weights) {
-		      for (FileRec frec : strnumA) {
-			 addGrams(frec.value,wgrams);
-			 addGrams(invert(frec.value),wgramsi);
-		      }
-		      if (!dedup) {
-		         for (FileRec frec : strnumB){
-			      addGrams(frec.value,wgrams);
-			      addGrams(invert(frec.value),wgramsi);
-		         }
-		      }
-		}*/
-		
+
+		/*
+		 * HashMap wgrams = new HashMap(); HashMap wgramsi = new HashMap(); if (weights)
+		 * { for (FileRec frec : strnumA) { addGrams(frec.value,wgrams);
+		 * addGrams(invert(frec.value),wgramsi); } if (!dedup) { for (FileRec frec :
+		 * strnumB){ addGrams(frec.value,wgrams); addGrams(invert(frec.value),wgramsi);
+		 * } } }
+		 */
+
 		ArrayList<Simhash.HashRec> set = new ArrayList<Simhash.HashRec>();
-	    HashMap<String,String> ssr = new HashMap<String,String>();
-	    
-		//parallel eval of hash fingerprints
+		HashMap<String, String> ssr = new HashMap<String, String>();
+
+		// parallel eval of hash fingerprints
 		final int CHUNK_SIZE = 8;
-		
+
 		int partitionSizeA = (dimA / CHUNK_SIZE) + ((dimA % CHUNK_SIZE) == 0 ? 0 : 1);
 		int partitionSizeB = (dimB / CHUNK_SIZE) + ((dimB % CHUNK_SIZE) == 0 ? 0 : 1);
-				
+
 		IntStream.range(0, partitionSizeA).parallel().forEach(chunkIndex -> {
 
 			int inf = (chunkIndex * CHUNK_SIZE);
 			int sup = (chunkIndex == partitionSizeA - 1) ? dimA - 1 : (inf + CHUNK_SIZE - 1);
-			
-		    Simhash sh = new Simhash(hdThr,rotations,gramdim,weights);
-		    ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
-		
-		    for (int index=inf; index <= sup;index++ ) {
-			   String hashKey;
-			   hashKey = new String("");
-			   for (int numv=0; numv<nVarSort; numv++) {
-				   hashKey=hashKey.concat(worksetIn.get(codeMatchingA).get(hashVariablesA.get(numv)).get(index));
-			   }
-			   try {
-				   setI.add(sh.new HashRec(0,index,hashKey,hashdim,totRec,weights));
-			   } catch (Exception e) {
-				   e.printStackTrace();
-			   }
-		    }
 
-		    //syncronise
-		    synchronized (set) {
-			    set.addAll(setI);
-		    }
+			Simhash sh = new Simhash(hdThr, rotations, gramdim, weights);
+			ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
+
+			for (int index = inf; index <= sup; index++) {
+				String hashKey;
+				hashKey = new String("");
+				for (int numv = 0; numv < nVarSort; numv++) {
+					hashKey = hashKey.concat(worksetIn.get(codeMatchingA).get(hashVariablesA.get(numv)).get(index));
+				}
+				try {
+					setI.add(sh.new HashRec(0, index, hashKey, hashdim, totRec, weights));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			// syncronise
+			synchronized (set) {
+				set.addAll(setI);
+			}
 		});
-		    
+
 		if (!dedup) {
-		    IntStream.range(0, partitionSizeB).parallel().forEach(chunkIndex -> {
-		    	int inf = (chunkIndex * CHUNK_SIZE);
+			IntStream.range(0, partitionSizeB).parallel().forEach(chunkIndex -> {
+				int inf = (chunkIndex * CHUNK_SIZE);
 				int sup = (chunkIndex == partitionSizeB - 1) ? dimB - 1 : (inf + CHUNK_SIZE - 1);
-		    
-				Simhash sh = new Simhash(hdThr,rotations,gramdim,weights);
-			    ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
-			    
-		        for (int index=inf; index <= sup;index++ ) {
-			        String hashKey;
-			        hashKey = new String("");
-			        for (int numv=0; numv<nVarSort; numv++) {
-				         hashKey=hashKey.concat(worksetIn.get(codeMatchingB).get(hashVariablesB.get(numv)).get(index));
-			        }
-			        try {
-						setI.add(sh.new HashRec(1,index,hashKey,hashdim,totRec,weights));
+
+				Simhash sh = new Simhash(hdThr, rotations, gramdim, weights);
+				ArrayList<Simhash.HashRec> setI = new ArrayList<Simhash.HashRec>();
+
+				for (int index = inf; index <= sup; index++) {
+					String hashKey;
+					hashKey = new String("");
+					for (int numv = 0; numv < nVarSort; numv++) {
+						hashKey = hashKey.concat(worksetIn.get(codeMatchingB).get(hashVariablesB.get(numv)).get(index));
+					}
+					try {
+						setI.add(sh.new HashRec(1, index, hashKey, hashdim, totRec, weights));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-		        }
-		        
-			    //syncronise
-			    synchronized (set) {
-				    set.addAll(setI);
-			    }
-		    });
+				}
+
+				// syncronise
+				synchronized (set) {
+					set.addAll(setI);
+				}
+			});
 		}
-		System.out.println(" hash decoding terminated");
-		
+
 		Simhash.HashRec h1;
 		Simhash.HashRec h2;
-		int soglia=hdThr;
-        int soglia2=(int) (hdThr*0.75);
-		int outsoglia=hashdim;
+		int soglia = hdThr;
+		int soglia2 = (int) (hdThr * 0.75);
+		int outsoglia = hashdim;
 		int sogliagiro;
 		int dist;
-		String tipogiro="";
+		String tipogiro = "";
 		Integer[] pair;
-		   
-		for (int giri=0; giri<=(hashdim/gradino); giri++) 
-		    for (int inv=0; inv<2; inv++) {
 
-		    sogliagiro=soglia;
-		    if (giri==(hashdim/gradino)) {
-			     if (inv==0) {
-			        Collections.sort(set, new Simhash.SortValue());
-					tipogiro="SNM  ";
-					sogliagiro=soglia2;
-			     }
-			     else {
-			        Collections.sort(set, new Simhash.SortInvert());
-					tipogiro="SNM/r";
-					sogliagiro=soglia2;
-				 }
-			  }
-			  else {
-			     if (inv==0) {
-		            Collections.sort(set, new Simhash.SortHash());
-					tipogiro="SH"+giri+"  ";
-			     }
-				 else {
-				    Collections.sort(set, new Simhash.SortHashInvert());
-					tipogiro="SH"+giri+"/r";
-				 }
-			  }
+		for (int giri = 0; giri <= (hashdim / gradino); giri++)
+			for (int inv = 0; inv < 2; inv++) {
 
-		      for (int ix=0; ix<(set.size()-1); ix++) {
+				sogliagiro = soglia;
+				if (giri == (hashdim / gradino)) {
+					if (inv == 0) {
+						Collections.sort(set, new Simhash.SortValue());
+						tipogiro = "SNM  ";
+						sogliagiro = soglia2;
+					} else {
+						Collections.sort(set, new Simhash.SortInvert());
+						tipogiro = "SNM/r";
+						sogliagiro = soglia2;
+					}
+				} else {
+					if (inv == 0) {
+						Collections.sort(set, new Simhash.SortHash());
+						tipogiro = "SH" + giri + "  ";
+					} else {
+						Collections.sort(set, new Simhash.SortHashInvert());
+						tipogiro = "SH" + giri + "/r";
+					}
+				}
 
-			     outsoglia=hashdim;
-		         for (int ix2=ix+1; ix2<set.size(); ix2++) {
-		             h1=set.get(ix);
-		             h2=set.get(ix2);
-					 if (h1.ds!=h2.ds || dedup) {
-					    //confronti++;
-						if (inv==0)
-						   dist=Simhash.hashdist(h1.hashcode,h2.hashcode);
-						else
-					       dist=Simhash.hashdist(h1.hashinvert,h2.hashinvert);
-		                                
-						if (dist<sogliagiro) {
-						   outsoglia=hashdim;
-		                   if (((h1.ds==0 && h2.ds==1) || (dedup && (h1.num<h2.num))) &&
-						       (ssr.get(h1.num+";"+h2.num)==null)) {
-		                             ssr.put(h1.num+";"+h2.num, h1.num+","+h2.num+",'"+tipogiro+"',"+dist);
-		                             pair = new Integer[2];
-		         					 pair[0]=h1.num;
-		                             pair[1]=h2.num;
-		         					 listPairs.add(pair);
-		                   }
-		                   else if (((h2.ds==0 && h1.ds==1) || (dedup && (h1.num>h2.num))) &&
-		    				   (ssr.get(h2.num+";"+h1.num)==null)) {
-		                             ssr.put(h2.num+";"+h1.num, h2.num+","+h1.num+",'"+tipogiro+"',"+dist);
-		                             pair = new Integer[2];
-		         					 pair[0]=h2.num;
-		                             pair[1]=h1.num;
-		         					 listPairs.add(pair);
-		                   }
+				for (int ix = 0; ix < (set.size() - 1); ix++) {
+
+					outsoglia = hashdim;
+					for (int ix2 = ix + 1; ix2 < set.size(); ix2++) {
+						h1 = set.get(ix);
+						h2 = set.get(ix2);
+						if (h1.ds != h2.ds || dedup) {
+							// confronti++;
+							if (inv == 0)
+								dist = Simhash.hashdist(h1.hashcodeRec, h2.hashcodeRec);
+							else
+								dist = Simhash.hashdist(h1.hashinvert, h2.hashinvert);
+
+							if (dist < sogliagiro) {
+								outsoglia = hashdim;
+								if (((h1.ds == 0 && h2.ds == 1) || (dedup && (h1.num < h2.num)))
+										&& (ssr.get(h1.num + ";" + h2.num) == null)) {
+									ssr.put(h1.num + ";" + h2.num,
+											h1.num + "," + h2.num + ",'" + tipogiro + "'," + dist);
+									pair = new Integer[2];
+									pair[0] = h1.num;
+									pair[1] = h2.num;
+									listPairs.add(pair);
+								} else if (((h2.ds == 0 && h1.ds == 1) || (dedup && (h1.num > h2.num)))
+										&& (ssr.get(h2.num + ";" + h1.num) == null)) {
+									ssr.put(h2.num + ";" + h1.num,
+											h2.num + "," + h1.num + ",'" + tipogiro + "'," + dist);
+									pair = new Integer[2];
+									pair[0] = h2.num;
+									pair[1] = h1.num;
+									listPairs.add(pair);
+								}
+							} else if (tipogiro.equals("SNM  ")) {
+								if (dist > outsoglia) {
+									outsoglia = hashdim;
+									break;
+								} else
+									outsoglia = dist;
+							} else {
+								break;
+							}
 						}
-		                else if (tipogiro.equals("SNM  ")) {
-						   if (dist>outsoglia) {
-						      outsoglia=hashdim;
-						      break;
-						   }
-						   else outsoglia=dist;
-		                }
-		                else {
-						   break;
-						}
-		             }
-		         }
-		      }
-			  
-		      System.out.println("round: "+tipogiro+" ssr-size: "+ssr.size());
-		      for (Simhash.HashRec h: set)
-		          h.progres(gradino,inv);
-		    }
-		
+					}
+				}
+
+				for (Simhash.HashRec h : set)
+					h.progres(gradino, inv);
+			}
+
 		int freq;
 		ArrayList<String> notAv = new ArrayList<String>();
-	    notAv.add(NOT_AV);
-	    
+		notAv.add(NOT_AV);
+
 		for (Integer[] curr : listPairs) {
 
 			final Map<String, String> valuesI = new HashMap<>();
-			
+
 			variabileNomeListMA.forEach(varnameMA -> {
 				valuesI.put(varnameMA, worksetIn.get(codeMatchingA).get(varnameMA).get(curr[0]));
 			});
@@ -2444,38 +2377,38 @@ public class SNelem implements Comparable<SNelem> {
 
 			String pattern = contingencyService.getPattern(valuesI);
 			freq = contingencyTable.get(pattern);
-		    contingencyTable.put(pattern, freq + 1);
-				
-			if (freq < MAXINDEXNUM) 
+			contingencyTable.put(pattern, freq + 1);
+
+			if (freq < MAXINDEXNUM)
 				coupledIndexByPattern.get(PREFIX_PATTERN + pattern).add((curr[0] + 1) + ";" + (curr[1] + 1));
 			else
-				coupledIndexByPattern.put(PREFIX_PATTERN + pattern,notAv);
+				coupledIndexByPattern.put(PREFIX_PATTERN + pattern, notAv);
 
-
-	};
-		
-		/*preparig outputs*/
-	contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
-	logService.save("Matching variables: " + nameMatchingVariables);
-
-	// write to worksetout
-	contingencyTable.forEach((key, value) -> {
-		int idx = 0;
-		for (String nameMatchingVariable : nameMatchingVariables) {
-			contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
 		}
-		contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
-	});
+		;
 
-	rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
-	rolesOut.put(codContingencyIndexTable, new ArrayList<>(coupledIndexByPattern.keySet()));
+		/* preparig outputs */
+		contingencyTableOut.put(VARIABLE_FREQUENCY, new ArrayList<>());
+		logService.save("Matching variables: " + nameMatchingVariables);
 
-	returnOut.put(EngineService.ROLES_OUT, rolesOut);
+		// write to worksetout
+		contingencyTable.forEach((key, value) -> {
+			int idx = 0;
+			for (String nameMatchingVariable : nameMatchingVariables) {
+				contingencyTableOut.get(nameMatchingVariable).add(String.valueOf(key.charAt(idx++)));
+			}
+			contingencyTableOut.get(VARIABLE_FREQUENCY).add(value.toString());
+		});
 
-	rolesOut.keySet().forEach(code -> {
-		rolesGroupOut.put(code, code);
-	});
-	returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
+		rolesOut.put(codContingencyTable, new ArrayList<>(contingencyTableOut.keySet()));
+		rolesOut.put(codContingencyIndexTable, new ArrayList<>(coupledIndexByPattern.keySet()));
+
+		returnOut.put(EngineService.ROLES_OUT, rolesOut);
+
+		rolesOut.keySet().forEach(code -> {
+			rolesGroupOut.put(code, code);
+		});
+		returnOut.put(EngineService.ROLES_GROUP_OUT, rolesGroupOut);
 
 		worksetOut.put(codContingencyTable, contingencyTableOut);
 		worksetOut.put(codContingencyIndexTable, coupledIndexByPattern);
@@ -2484,11 +2417,10 @@ public class SNelem implements Comparable<SNelem> {
 		logService.save("Process Contingency Table End");
 		return returnOut;
 	}
-	
-	//used
-	public Map<?, ?> createResiduals(Long idelaborazione,
-			Map<String, ArrayList<String>> ruoliVariabileNome, Map<String, Map<String, List<String>>> worksetIn,
-			Map<String, String> parametriMap) throws Exception {
+
+	// used
+	public Map<?, ?> createResiduals(Long idelaborazione, Map<String, ArrayList<String>> ruoliVariabileNome,
+			Map<String, Map<String, List<String>>> worksetIn, Map<String, String> parametriMap) throws Exception {
 
 		final Map<String, Map<?, ?>> returnOut = new LinkedHashMap<>();
 		final Map<String, Map<?, ?>> worksetOut = new LinkedHashMap<>();
@@ -2503,9 +2435,10 @@ public class SNelem implements Comparable<SNelem> {
 		ruoliVariabileNome.get(codeMatchingA).forEach((varname) -> {
 			variabileNomeListMA.add(varname);
 		});
-		/*worksetIn.get(codeMatchingA).keySet().forEach((varname) -> {
-			variabileNomeListMA.add(varname);
-		});*/
+		/*
+		 * worksetIn.get(codeMatchingA).keySet().forEach((varname) -> {
+		 * variabileNomeListMA.add(varname); });
+		 */
 
 		ruoliVariabileNome.get(codeMatchingB).forEach((varname) -> {
 			variabileNomeListMB.add(varname);
@@ -2516,9 +2449,7 @@ public class SNelem implements Comparable<SNelem> {
 
 		rolesOut.put(codResidualA, variabileNomeListMA);
 		rolesOut.put(codResidualB, variabileNomeListMB);
-		
-		// start elab
-		
+
 		final Map<String, ArrayList<String>> residualA = Collections.synchronizedMap(new LinkedHashMap<>());
 		final Map<String, ArrayList<String>> residualB = Collections.synchronizedMap(new LinkedHashMap<>());
 
@@ -2529,9 +2460,9 @@ public class SNelem implements Comparable<SNelem> {
 			residualB.put(varname, new ArrayList<>());
 		});
 
-		Map<String,String> KeyA= new HashMap<String,String>();
-		Map<String,String> KeyB= new HashMap<String,String>();
-		
+		Map<String, String> KeyA = new HashMap<String, String>();
+		Map<String, String> KeyB = new HashMap<String, String>();
+
 		Map<String, List<String>> matches = worksetIn.get(codMatchingTableReduced);
 		if (matches == null) {
 			matches = worksetIn.get(codMatchingTable);
@@ -2539,44 +2470,39 @@ public class SNelem implements Comparable<SNelem> {
 
 		int size = matches.get(ROW_IA).size();
 
-		System.out.println("calcolata dimensione "+size);
-
-		for (int innerIndex = 0; innerIndex < size; innerIndex++){
-			KeyA.put(matches.get(ROW_IA).get(innerIndex),matches.get(ROW_IB).get(innerIndex));
-	    	KeyB.put(matches.get(ROW_IB).get(innerIndex),matches.get(ROW_IA).get(innerIndex));
+		for (int innerIndex = 0; innerIndex < size; innerIndex++) {
+			KeyA.put(matches.get(ROW_IA).get(innerIndex), matches.get(ROW_IB).get(innerIndex));
+			KeyB.put(matches.get(ROW_IB).get(innerIndex), matches.get(ROW_IA).get(innerIndex));
 		}
-		
-	    int ressize=0;
-	    
-	    int dimset = worksetIn.get(codeMatchingA).get(variabileNomeListMA.get(0)).size();
-	    
-	    for (int innerIndex=0; innerIndex < dimset; innerIndex++) {
-	    	if (!KeyA.containsKey(Integer.toString(innerIndex))) {
-	    		for (String varname:variabileNomeListMA) {
-	    			residualA.get(varname).add(worksetIn.get(codeMatchingA).get(varname).get(innerIndex));
-	    		};	
-	    		ressize++;
-	    	}
-	    }
-	    
-	    System.out.println("residualA size "+ressize);
-	    
-        ressize=0;
-	    
-	    dimset = worksetIn.get(codeMatchingB).get(variabileNomeListMB.get(0)).size();
-	    
-	    for (int innerIndex=0; innerIndex < dimset; innerIndex++) {
-	    	if (!KeyB.containsKey(Integer.toString(innerIndex))) {
-	    		for (String varname:variabileNomeListMB) {
-	    			residualB.get(varname).add(worksetIn.get(codeMatchingB).get(varname).get(innerIndex));
-	    		};	
-	    		ressize++;
-	    	}
-	    }
-	    
-	    System.out.println("residualB size "+ressize);
-		
-		//end elab
+
+		int ressize = 0;
+
+		int dimset = worksetIn.get(codeMatchingA).get(variabileNomeListMA.get(0)).size();
+
+		for (int innerIndex = 0; innerIndex < dimset; innerIndex++) {
+			if (!KeyA.containsKey(Integer.toString(innerIndex))) {
+				for (String varname : variabileNomeListMA) {
+					residualA.get(varname).add(worksetIn.get(codeMatchingA).get(varname).get(innerIndex));
+				}
+				;
+				ressize++;
+			}
+		}
+
+		ressize = 0;
+
+		dimset = worksetIn.get(codeMatchingB).get(variabileNomeListMB.get(0)).size();
+
+		for (int innerIndex = 0; innerIndex < dimset; innerIndex++) {
+			if (!KeyB.containsKey(Integer.toString(innerIndex))) {
+				for (String varname : variabileNomeListMB) {
+					residualB.get(varname).add(worksetIn.get(codeMatchingB).get(varname).get(innerIndex));
+				}
+				;
+				ressize++;
+			}
+		}
+
 		returnOut.put(EngineService.ROLES_OUT, rolesOut);
 		rolesOut.keySet().forEach(code -> {
 			rolesGroupOut.put(code, code);

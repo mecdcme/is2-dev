@@ -597,7 +597,7 @@ public class WorkflowService {
                         else
                             workSetDao.save(sr.getWorkset());
 
-                        });
+                     });
 
                 }
             }

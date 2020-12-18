@@ -87,7 +87,7 @@ public class EngineRServe extends EngineR implements EngineService {
         this.fileScriptR = stepInstance.getAppService().getSource();
 
         prepareEnv();
-        createConnection(null, 0);
+        createConnection();
         bindInputColumnsMap(worksetVariables, WORKSET_IN);
         bindInputColumnsParams(parametersMap, PARAMETERS_IN);
         bindInputColumns(rulesetMap, RULESET);
@@ -95,16 +95,16 @@ public class EngineRServe extends EngineR implements EngineService {
 
     }
 
-    private void createConnection(String server, int port) throws RserveException {
+    private void createConnection() throws RserveException {
         // Create a connection to Rserve instance running on default port 6311
-        if (port == 0) {
-            port = 6311;
+        if (serverRPort == 0) {
+        	serverRPort = 6311;
         }
 
-        if (server == null) {
+        if ( serverRHost == null||serverRHost.isEmpty()) {
             connection = new RConnection();
         } else {
-            connection = new RConnection(server, port);
+            connection = new RConnection(serverRHost, serverRPort);
         }
         connection.eval("setwd('" + pathR + "')");
         connection.eval("source('" + fileScriptR + "')");
@@ -113,7 +113,7 @@ public class EngineRServe extends EngineR implements EngineService {
 
     public void closeConnection() {
         if (connection != null) {
-            connection.close();
+        	connection.close();
         }
     }
 
@@ -140,7 +140,7 @@ public class EngineRServe extends EngineR implements EngineService {
                 }
 
             }
-            connection.eval(varR + " <- data.frame(" + listaCampi.substring(0, listaCampi.length() - 1) + ")"); // Create
+            connection.eval(varR + " <- data.frame(" + listaCampi.substring(0, listaCampi.length() - 1) + ")"); // Create 
             // a
             // data
             // frame
@@ -148,6 +148,27 @@ public class EngineRServe extends EngineR implements EngineService {
     }
 
     public void bindInputColumnsMap(Map<String, Map<String, List<String>>> worksetIn, String varR)
+            throws REngineException {
+
+        if (!worksetIn.isEmpty()) {
+            connection.eval(varR + " <- list()");
+
+            worksetIn.forEach((keyW, workset) -> {
+            try {
+              	bindInputColumns(workset, keyW);
+               	connection.eval(varR + "<- c("+ varR +","+ keyW +")");
+	            } catch (REngineException e1) {
+	                throw new RuntimeException(e1);
+	            }
+            
+            }); 
+            connection.eval(varR+"<-do.call(cbind.data.frame,"+varR+")");
+            //connection.eval("print(\"BICol result is:\")");
+            //connection.eval("print(str("+varR+"))");
+         }
+    }
+
+    public void bindInputColumnsMapOLD(Map<String, Map<String, List<String>>> worksetIn, String varR)
             throws REngineException {
 
         if (!worksetIn.isEmpty()) {
@@ -173,7 +194,7 @@ public class EngineRServe extends EngineR implements EngineService {
                         try {
                             if (Utility.isNumericR(arrX)) {
                                 connection.eval(key + " <- as.numeric(" + key + ")");
-                                connection.eval("list.append(" + keyW + "," + key);
+                                connection.eval("append(" + keyW + "," + key + ")");
                             }
                         } catch (Exception e) {
                             Logger.getRootLogger().error(e.getMessage());
@@ -181,7 +202,7 @@ public class EngineRServe extends EngineR implements EngineService {
 
                     }
                     // engine.eval(keyW + " <- as.numeric(" + key + ")");
-                    connection.eval("list.append(" + varR + "," + keyW);
+                    connection.eval("append(" + varR + "," + keyW+ ")");
                 } catch (REngineException e1) {
                     // TODO Auto-generated catch block
                     throw new RuntimeException(e1);
@@ -192,7 +213,8 @@ public class EngineRServe extends EngineR implements EngineService {
             // frame
         }
     }
-
+    
+    
     public void bindInputColumnsParams(Map<String, List<String>> workset, String varR) throws REngineException {
 
         if (!workset.isEmpty()) {
@@ -209,7 +231,8 @@ public class EngineRServe extends EngineR implements EngineService {
             }
 
             listaCampi = listaCampi.substring(0, listaCampi.length() - 1);
-
+            //bisogna ritornare i campi da json altrimenti esplode qui
+            //connection.eval(varR + " <- list(" + listaCampi + ")");
             connection.eval(varR + " <- list(" + listaCampi + ")");
         }
     }
@@ -237,8 +260,8 @@ public class EngineRServe extends EngineR implements EngineService {
         }
     }
 
-    // @Override
-    public void doActionOld() throws RserveException {
+    @Override
+    public void doAction() throws RserveException {
 
         String fname = stepInstance.getMethod();
         // mlest <- ml.est (workset, y=Y,";
@@ -255,12 +278,12 @@ public class EngineRServe extends EngineR implements EngineService {
         command = command.substring(0, command.length() - 1);
         command += ")";
         Logger.getRootLogger().debug("Eseguo " + command);
-
+        
         connection.eval(command);
     }
 
-    @Override
-    public void doAction() throws RserveException {
+    //@Override
+    public void doActionNew() throws RserveException {
 
         String fname = stepInstance.getMethod();
         // mlest <- ml.est (workset, y=Y,";
@@ -513,8 +536,8 @@ public class EngineRServe extends EngineR implements EngineService {
                 ruoloGruppo = ROLE_DEFAULT;
             }
             AppRole sxRuolo = rolesMap.get(ruolo) != null ? rolesMap.get(ruolo) : rolesMap.get(ROLE_DEFAULT);
-            AppRole sxRuoloGruppo = rolesMap.get(ruoloGruppo);
-
+            AppRole sxRuoloGruppo = rolesMap.get(ruoloGruppo) != null ? rolesMap.get(ruoloGruppo) : rolesMap.get(ROLE_DEFAULT);
+            
             stepRuntime = Utility.retrieveStepRuntime(dataMap, nomeW, sxRuolo);
 
             if (stepRuntime != null) { // update
@@ -557,9 +580,9 @@ public class EngineRServe extends EngineR implements EngineService {
             if (ruoloGruppo == null) {
                 ruoloGruppo = ROLE_DEFAULT;
             }
-            AppRole sxRuolo = rolesMap.get(ruolo);
-            AppRole sxRuoloGruppo = rolesMap.get(ruoloGruppo);
-
+            AppRole sxRuolo = rolesMap.get(ruolo) != null ? rolesMap.get(ruolo) : rolesMap.get(ROLE_DEFAULT);
+            AppRole sxRuoloGruppo = rolesMap.get(ruoloGruppo) != null ? rolesMap.get(ruoloGruppo) : rolesMap.get(ROLE_DEFAULT);
+            
             stepRuntime = Utility.retrieveStepRuntime(dataMap, nomeW, sxRuolo);
 
             if (stepRuntime != null) { // update

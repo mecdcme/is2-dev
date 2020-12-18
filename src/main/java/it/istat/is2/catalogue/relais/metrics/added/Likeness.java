@@ -11,10 +11,10 @@ public final class Likeness extends AbstractStringMetric implements Serializable
 
 	private static final long serialVersionUID = 1L;
 
-    private final float ESTIMATEDTIMINGCONST = 1.34e-4f;
+    private static final float ESTIMATEDTIMINGCONST = 1.34e-4f;
 
     private final InterfaceTokeniser tokeniser;
-    public HashMap<String,Integer> voc;
+    public HashMap<String,Integer> voc=null;
     int vocitot, toktot;
 
     public Likeness() {
@@ -122,9 +122,13 @@ public final class Likeness extends AbstractStringMetric implements Serializable
 
         }
 
-        float retval = ((float) similar/(float)(similar+difference));
+        float retval = 0f;
+        if ((similar+difference)>0f) 
+           retval = ((float) similar/(float)(similar+difference));
+        
         return (retval);
     }
+
 }
 
 

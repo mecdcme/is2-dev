@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,7 +50,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.renjin.sexp.Vector;
 
-import it.istat.is2.catalogue.relais.bean.OrderBean;
 import it.istat.is2.workflow.domain.AppRole;
 import it.istat.is2.workflow.domain.BusinessProcess;
 import it.istat.is2.workflow.domain.DataTypeCls;
@@ -630,50 +628,7 @@ public class Utility {
         return true;
     }
 
-    public static Map<String, List<String>> sortDatasetInMapValues(final Map<String, List<String>> mapValues,
-                                                                   final List<String> datasetFields, final String fieldSort, final String sortAsc) {
-
-        List<OrderBean> valuesElements = new ArrayList<>();
-        for (int i = 0; i < mapValues.get(fieldSort).size(); i++) {
-            valuesElements.add(new OrderBean(i, mapValues.get(fieldSort).get(i)));
-        }
-
-        Collections.sort(valuesElements);
-        
-        datasetFields.stream().forEach(fields -> {
-            final List<String> valuesOrdered = new ArrayList<>();
-            // indexArraySortedList.forEach(index ->
-            // valuesOrdered.add(mapValues.get(fields).get(index)));
-            for (OrderBean indexElement : valuesElements) {
-                valuesOrdered.add(mapValues.get(fields).get(indexElement.getIndex()));
-            }
-            mapValues.replace(fields, valuesOrdered);
-
-        });
-        valuesElements.clear();
-        return mapValues;
-    }
-
-    public static void printNElementsInMapValues(final Map<String, List<String>> mapValues, int nValues) {
-
-        List<String> keys = new ArrayList<>(mapValues.keySet());
-        keys.forEach(key -> {
-            System.out.print(key + ";");
-
-        });
-        System.out.println();
-        int[] position = new int[]{0};
-        while (position[0] < nValues) {
-
-            keys.forEach(key -> {
-                System.out.print(mapValues.get(key).get(position[0]) + ";");
-
-            });
-            position[0]++;
-            System.out.println();
-        }
-    }
-
+  
 
     public static boolean isNullOrEmpty(final Collection<?> c) {
         return c == null || c.isEmpty();
