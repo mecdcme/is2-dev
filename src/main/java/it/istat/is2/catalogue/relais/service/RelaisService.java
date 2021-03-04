@@ -2471,6 +2471,7 @@ public class RelaisService {
 		int size = matches.get(ROW_IA).size();
 
 		for (int innerIndex = 0; innerIndex < size; innerIndex++) {
+			System.out.println("Insert key"+matches.get(ROW_IA).get(innerIndex));
 			KeyA.put(matches.get(ROW_IA).get(innerIndex), matches.get(ROW_IB).get(innerIndex));
 			KeyB.put(matches.get(ROW_IB).get(innerIndex), matches.get(ROW_IA).get(innerIndex));
 		}
@@ -2480,11 +2481,10 @@ public class RelaisService {
 		int dimset = worksetIn.get(codeMatchingA).get(variabileNomeListMA.get(0)).size();
 
 		for (int innerIndex = 0; innerIndex < dimset; innerIndex++) {
-			if (!KeyA.containsKey(Integer.toString(innerIndex))) {
+			if (!KeyA.containsKey(Integer.toString((innerIndex+1)))) {
 				for (String varname : variabileNomeListMA) {
 					residualA.get(varname).add(worksetIn.get(codeMatchingA).get(varname).get(innerIndex));
 				}
-				;
 				ressize++;
 			}
 		}
@@ -2494,7 +2494,7 @@ public class RelaisService {
 		dimset = worksetIn.get(codeMatchingB).get(variabileNomeListMB.get(0)).size();
 
 		for (int innerIndex = 0; innerIndex < dimset; innerIndex++) {
-			if (!KeyB.containsKey(Integer.toString(innerIndex))) {
+			if (!KeyB.containsKey(Integer.toString((innerIndex+1)))) {
 				for (String varname : variabileNomeListMB) {
 					residualB.get(varname).add(worksetIn.get(codeMatchingB).get(varname).get(innerIndex));
 				}
